@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daily Team Report</title>
+    <!-- Library xlsx-js-style untuk export excel -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
+        body { background-color: #f3f4f6; color: #1f2937; padding-bottom: 40px; }
+        
+        /* Navbar */
+        nav { background: #ffffff; border-bottom: 1px solid #e5e7eb; padding: 0 20px; display: flex; justify-content: space-between; align-items: center; height: 60px; position: sticky; top: 0; z-index: 10; }
+        .logo { font-weight: bold; font-size: 18px; color: #2563eb; display: flex; align-items: center; gap: 8px; }
+        .nav-tabs { display: flex; gap: 8px; }
+        .nav-tabs button { background: none; border: none; padding: 18px 12px; font-size: 14px; cursor: pointer; color: #4b5563; border-bottom: 3px solid transparent; font-weight: 500; }
+        .nav-tabs button.active { color: #2563eb; border-bottom-color: #2563eb; font-weight: 600; }
+        
+        /* Container & Cards */
+        .container { max-width: 1050px; margin: 20px auto; padding: 0 15px; }
+        .card { background: #ffffff; border-radius: 8px; border: 1px solid #e5e7eb; padding: 20px; margin-bottom: 20px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+        .hidden { display: none !important; }
+        
+        /* Forms & Buttons */
+        h1 { font-size: 20px; font-weight: 700; margin-bottom: 6px; color: #111827; }
+        p.subtitle { color: #6b7280; font-size: 14px; margin-bottom: 16px; }
+        textarea { width: 100%; height: 200px; padding: 12px; border: 1px solid #d1d5db; border-radius: 6px; font-family: monospace; font-size: 13px; margin-bottom: 15px; outline: none; }
+        textarea:focus { border-color: #2563eb; box-shadow: 0 0 0 2px rgba(37,99,235,0.1); }
+        
+        button.btn { background: #2563eb; color: #ffffff; border: none; padding: 9px 16px; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 500; display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s ease; }
+        button.btn-green { background: #16a34a; }
+        button.btn-purple { background: #4f46e5; }
+        button.btn-danger { background: #dc2626; padding: 4px 8px; font-size: 12px; }
+        button.btn:hover { opacity: 0.9; }
+        
+        /* Stats Grid */
+        .grid-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 20px; }
+        .stat-box { background: #ffffff; padding: 14px; border-radius: 6px; border: 1px solid #e5e7eb; text-align: center; }
+        .stat-box label { font-size: 11px; text-transform: uppercase; color: #6b7280; font-weight: 600; }
+        .stat-box .num { font-size: 22px; font-weight: 700; margin-top: 4px; }
+        
+        /* Table */
+        .table-container { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; font-size: 14px; margin-top: 10px; }
+        th, td { padding: 10px 12px; text-align: left; border-bottom: 1px solid #f3f4f6; }
+        th { background: #f9fafb; color: #4b5563; font-size: 12px; text-transform: uppercase; font-weight: 600; }
+        
+        /* Status Badges */
+        select.status-select { padding: 5px 10px; border-radius: 20px; border: 1px solid #d1d5db; font-size: 12px; font-weight: 600; cursor: pointer; outline: none; }
+        .status-Belum { background: #f3f4f6; color: #374151; border-color: #d1d5db; }
+        .status-OnProgress { background: #fef08a; color: #854d0e; border-color: #fde047; }
+        .status-Selesai { background: #dcfce7; color: #166534; border-color: #86efac; }
+        .status-Cancel { background: #fee2e2; color: #991b1b; border-color: #fca5a5; }
+        
+        .alert-box { background: #eff6ff; border: 1px solid #bfdbfe; color: #1e40af; padding: 12px 16px; border-radius: 6px; font-size: 14px; margin-bottom: 20px; }
+        .filter-group { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; align-items: center; }
+        .filter-group input, .filter-group select { padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px; outline: none; }
+    </style>
+</head>
+<body>
+
+    <!-- Navbar -->
+    <nav>
+        <div class="logo">📋 Daily Team Report</div>
+        <div class="nav-tabs">
+            <button onclick="switchPage('dashboard')" id="tab-dashboard" class="active">Dashboard</button>
+            <button onclick="switchPage('import')" id="tab-import">Import WA</button>
+            <button onclick="switchPage('report')" id="tab-report">Daily Report</button>
+            <button onclick="switchPage('history')" id="tab-history">History</button>
+        </div>
+    </nav>
+
+    <div class="container">
+        
+        <!-- DASHBOARD PAGE -->
+        <div id="page-dashboard">
+            <div class="card">
+                <div class="filter-group">
+                    <label style="font-size:14px; font-weight:600;">Tanggal Laporan:</label>
+                    <input type="date" id="dash-date" onchange="renderDashboard()">
+                </div>
+            </div>
+            <div class="grid-stats" id="dash-stats"></div>
+            <div class="alert-box" id="dash-summary">Belum ada data untuk diproses.</div>
+            <div class="card">
+                <h1>Rekap Per Anggota</h1>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Nama</th>
+                                <th>Total To Do</th>
+                                <th>Selesai</th>
+                                <th>On Progress</th>
+                                <th>Belum</th>
+                                <th>Cancel</th>
+                                <th>Completion Rate</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dash-recap-body"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- IMPORT PAGE -->
+        <div id="page-import" class="hidden">
+            <div class="card">
+                <h1>Import WhatsApp</h1>
+                <p class="subtitle">Paste pesan WhatsApp di bawah ini. Jika deadline tidak ditulis, otomatis menggunakan tanggal hari ini.</p>
+                
+                <textarea id="wa-input" placeholder="To Do List *Widia (30-09-2026)*&#10;1. Lanjut Buat Brief LK 5-6 Oktober (dl : 30-09-2026)✅&#10;2. QC hasil content client tanpa deadline..."></textarea>
+                
+                <button class="btn" onclick="processImport()">Preview Data</button>
+            </div>
+
+            <div id="preview-card" class="card hidden">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; flex-wrap:wrap; gap:10px;">
+                    <h1>Preview Data Parsing</h1>
+                    <button class="btn btn-green" onclick="saveImportData()">Simpan & Update Status</button>
+                </div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Nama</th>
+                                <th>Tanggal</th>
+                                <th>To Do List</th>
+                                <th>Deadline</th>
+                                <th>Keterangan</th>
+                                <th>Status Terdeteksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="preview-body"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- DAILY REPORT PAGE -->
+        <div id="page-report" class="hidden">
+            <div class="card">
+                <h1>Detail Laporan To Do List</h1>
+                <p class="subtitle">Kelola dan ubah status pengerjaan setiap To Do tim di sini.</p>
+                <div class="filter-group">
+                    <input type="date" id="report-date" onchange="renderReport()">
+                    <select id="report-name" onchange="renderReport()"><option value="">Semua Anggota</option></select>
+                    <select id="report-status" onchange="renderReport()">
+                        <option value="">Semua Status</option>
+                        <option value="Belum">Belum</option>
+                        <option value="On Progress">On Progress</option>
+                        <option value="Selesai">Selesai</option>
+                        <option value="Cancel">Cancel</option>
+                    </select>
+                    <button class="btn btn-green" onclick="exportMultiTabExcel()">Export Excel (Multi-Tab)</button>
+                    <!-- TOMBOL COPY FORMAT WA DENGAN INDIKATOR LANGSUNG -->
+                    <button class="btn btn-purple" id="btn-copy-wa" onclick="copyFormatWA()">Copy Format WA</button>
+                </div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>No</th>
+                                <th>Nama</th>
+                                <th>Tanggal</th>
+                                <th>To Do List</th>
+                                <th>Deadline</th>
+                                <th>Keterangan</th>
+                                <th>Status</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="report-body"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- HISTORY PAGE -->
+        <div id="page-history" class="hidden">
+            <div class="card">
+                <h1>Riwayat Laporan Harian</h1>
+                <p class="subtitle">Klik pada tanggal untuk membuka laporan lengkap hari tersebut.</p>
+                <div id="history-list" style="margin-top:15px;"></div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        let db = JSON.parse(localStorage.getItem('daily_report_db')) || [];
+        let tempPreview = [];
+
+        function switchPage(page) {
+            document.querySelectorAll('[id^="page-"]').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.nav-tabs button').forEach(el => el.classList.remove('active'));
+            document.getElementById(`page-${page}`).classList.remove('hidden');
+            document.getElementById(`tab-${page}`).classList.add('active');
+
+            if(page === 'dashboard') initDashboard();
+            if(page === 'report') initReport();
+            if(page === 'history') renderHistory();
+        }
+
+        function getToday() { return new Date().toISOString().split('T')[0]; }
+
+        function parseIndoDate(str) {
+            if(!str) return getToday();
+            const parts = str.split(/[\/\-]/);
+            if(parts.length >= 2) {
+                let d = parts[0].padStart(2, '0');
+                let m = parts[1].padStart(2, '0');
+                let y = parts[2] ? (parts[2].length === 2 ? '20' + parts[2] : parts[2]) : new Date().getFullYear().toString();
+                return `${y}-${m}-${d}`;
+            }
+            return str;
+        }
+
+        function isDatePattern(str) {
+            return /^\d{1,2}[\/\-]\d{1,2}(?:[\/\-]\d{2,4})?$/.test(str.trim());
+        }
+
+        // --- PARSING LOGIC ---
+        function processImport() {
+            const text = document.getElementById('wa-input').value;
+            if(!text.trim()) return alert('Paste teks WhatsApp terlebih dahulu!');
+
+            const lines = text.split('\n').map(l => l.trim());
+            let currentName = '', currentDate = '', count = 1;
+            tempPreview = [];
+
+            for(let line of lines) {
+                if(!line) continue;
+
+                if(/^[^a-zA-Z]*to\s*do/i.test(line)) {
+                    const dateMatch = line.match(/(\d{1,2}[\/\-]\d{1,2}(?:[\/\-]\d{2,4})?)/);
+                    if(dateMatch) {
+                        currentDate = parseIndoDate(dateMatch[1]);
+                    } else {
+                        currentDate = currentDate || getToday();
+                    }
+
+                    let rawName = line.replace(/^[^a-zA-Z]*to\s*do(?:\s*list)?/i, '');
+                    if(dateMatch) rawName = rawName.replace(dateMatch[0], '');
+                    rawName = rawName.replace(/\b(mengerjakan|hari\s*ini|task|untuk|dari|berikut|adalah)\b/gi, ' ');
+                    rawName = rawName.replace(/[^a-zA-Z\s]/g, ' ');
+                    currentName = rawName.replace(/\s+/g, ' ').trim();
+
+                    count = 1;
+                    continue;
+                }
+
+                if(currentName && currentDate) {
+                    let task = line.replace(/^[\d\-\.\*\)\s]+/, '').trim();
+                    task = task.replace(/\*+$/, '').trim(); 
+
+                    if(!task) continue;
+
+                    let statusTask = 'Belum';
+                    if (/✅|✔/.test(task)) {
+                        statusTask = 'Selesai';
+                        task = task.replace(/✅|✔/g, '').trim();
+                    }
+
+                    // Deteksi Deadline
+                    let deadlineVal = '';
+                    const dlMatch = task.match(/\(?(?:dl|deadline)\s*[:=]\s*([^)]+)\)?/i);
+                    if (dlMatch) {
+                        deadlineVal = parseIndoDate(dlMatch[1].trim());
+                        task = task.replace(/\(?(?:dl|deadline)\s*[:=]\s*[^)]+\)?/gi, '').trim();
+                    } else {
+                        deadlineVal = currentDate; // Fallback ke tanggal laporan/hari ini
+                    }
+
+                    let ket = '';
+                    const parentheticalMatch = task.match(/(.+?)\s*\((.+?)\)$/);
+                    
+                    if(parentheticalMatch) {
+                        const insideText = parentheticalMatch[2].trim();
+                        if(isDatePattern(insideText)) {
+                            task = parentheticalMatch[1].trim();
+                            ket = '';
+                        } else {
+                            task = parentheticalMatch[1].trim();
+                            ket = insideText;
+                        }
+                    }
+
+                    tempPreview.push({
+                        id: Math.random().toString(36).substr(2, 9),
+                        nama: currentName,
+                        tanggal: currentDate,
+                        no: count++,
+                        task: task,
+                        deadline: deadlineVal,
+                        keterangan: ket,
+                        status: statusTask
+                    });
+                }
+            }
+
+            if(tempPreview.length === 0) {
+                return alert('Format tidak dikenali! Pastikan ada kata "To Do" di header.');
+            }
+
+            const tbody = document.getElementById('preview-body');
+            tbody.innerHTML = tempPreview.map(i => `
+                <tr>
+                    <td><b style="color:#2563eb">${i.nama}</b></td>
+                    <td>${i.tanggal}</td>
+                    <td>${i.task}</td>
+                    <td>${i.deadline}</td>
+                    <td>${i.keterangan || '<span style="color:#ccc;">-</span>'}</td>
+                    <td><span class="status-select status-${i.status}">${i.status}</span></td>
+                </tr>
+            `).join('');
+            document.getElementById('preview-card').classList.remove('hidden');
+        }
+
+        function saveImportData() {
+            let updatedCount = 0;
+            let addedCount = 0;
+
+            tempPreview.forEach(p => {
+                const existingIndex = db.findIndex(d => 
+                    d.nama.toLowerCase() === p.nama.toLowerCase() && 
+                    d.tanggal === p.tanggal && 
+                    d.task.toLowerCase() === p.task.toLowerCase()
+                );
+
+                if (existingIndex !== -1) {
+                    if (p.status === 'Selesai') {
+                        db[existingIndex].status = 'Selesai';
+                        updatedCount++;
+                    }
+                    if (p.deadline) {
+                        db[existingIndex].deadline = p.deadline;
+                    }
+                    if (p.keterangan) {
+                        db[existingIndex].keterangan = p.keterangan;
+                    }
+                } else {
+                    db.push(p);
+                    addedCount++;
+                }
+            });
+
+            localStorage.setItem('daily_report_db', JSON.stringify(db));
+            
+            document.getElementById('wa-input').value = '';
+            document.getElementById('preview-card').classList.add('hidden');
+            document.getElementById('dash-date').value = tempPreview[0].tanggal;
+            tempPreview = [];
+            
+            alert(`Berhasil sinkronisasi data!\n- Tugas baru ditambah: ${addedCount}\n- Status diperbarui jadi Selesai: ${updatedCount}`);
+            switchPage('dashboard');
+        }
+
+        // --- DASHBOARD LOGIC ---
+        function initDashboard() {
+            if(!document.getElementById('dash-date').value) document.getElementById('dash-date').value = getToday();
+            renderDashboard();
+        }
+
+        function renderDashboard() {
+            const filterDate = document.getElementById('dash-date').value;
+            const data = db.filter(d => d.tanggal === filterDate);
+            
+            const stats = { total: 0, selesai: 0, onprogress: 0, belum: 0, cancel: 0 };
+            const users = {};
+
+            data.forEach(d => {
+                stats.total++;
+                const key = d.status.toLowerCase().replace(/\s+/g, '');
+                if(stats[key] !== undefined) stats[key]++;
+                
+                if(!users[d.nama]) users[d.nama] = { total: 0, selesai: 0, onprogress: 0, belum: 0, cancel: 0 };
+                users[d.nama].total++;
+                if(users[d.nama][key] !== undefined) users[d.nama][key]++;
+            });
+
+            const validTotal = stats.total - stats.cancel;
+            const rate = validTotal > 0 ? ((stats.selesai / validTotal) * 100).toFixed(1) : 0;
+            const userCount = Object.keys(users).length;
+
+            document.getElementById('dash-stats').innerHTML = `
+                <div class="stat-box"><label>Anggota</label><div class="num">${userCount}</div></div>
+                <div class="stat-box"><label>Total To Do</label><div class="num">${stats.total}</div></div>
+                <div class="stat-box"><label>Selesai</label><div class="num" style="color:#16a34a">${stats.selesai}</div></div>
+                <div class="stat-box"><label>On Progress</label><div class="num" style="color:#ca8a04">${stats.onprogress}</div></div>
+                <div class="stat-box"><label>Belum</label><div class="num" style="color:#4b5563">${stats.belum}</div></div>
+                <div class="stat-box"><label>Completion</label><div class="num" style="color:#2563eb">${rate}%</div></div>
+            `;
+
+            document.getElementById('dash-summary').innerText = stats.total > 0 
+                ? `Hari ini terdapat ${stats.total} To Do dari ${userCount} tim. Sebanyak ${stats.selesai} To Do telah selesai, ${stats.onprogress} masih on progress, dan ${stats.belum} belum dikerjakan.`
+                : `Belum ada laporan yang di-import untuk tanggal ${filterDate}.`;
+
+            document.getElementById('dash-recap-body').innerHTML = Object.keys(users).length ? Object.entries(users).map(([name, s]) => {
+                const uValid = s.total - s.cancel;
+                const uRate = uValid > 0 ? ((s.selesai / uValid) * 100).toFixed(0) : 0;
+                return `<tr>
+                    <td><b>${name}</b></td>
+                    <td>${s.total}</td>
+                    <td style="color:#16a34a; font-weight:600;">${s.selesai}</td>
+                    <td style="color:#ca8a04; font-weight:600;">${s.onprogress}</td>
+                    <td>${s.belum}</td>
+                    <td style="color:#dc2626;">${s.cancel}</td>
+                    <td><b>${uRate}%</b></td>
+                </tr>`;
+            }).join('') : '<tr><td colspan="7" style="text-align:center; color:#9ca3af; padding:20px;">Tidak ada data.</td></tr>';
+        }
+
+        // --- REPORT & DETAIL LOGIC ---
+        function initReport(dateFilter = null) {
+            const dateInput = document.getElementById('report-date');
+            if(dateFilter) dateInput.value = dateFilter;
+            else if(!dateInput.value) dateInput.value = getToday();
+
+            const names = [...new Set(db.map(d => d.nama))].sort();
+            const currentNameFilter = document.getElementById('report-name').value;
+            document.getElementById('report-name').innerHTML = '<option value="">Semua Anggota</option>' + 
+                names.map(n => `<option value="${n}" ${currentNameFilter === n ? 'selected':''}>${n}</option>`).join('');
+
+            renderReport();
+        }
+
+        function renderReport() {
+            const fDate = document.getElementById('report-date').value;
+            const fName = document.getElementById('report-name').value;
+            const fStatus = document.getElementById('report-status').value;
+
+            let filtered = db.filter(d => d.tanggal === fDate);
+            if(fName) filtered = filtered.filter(d => d.nama === fName);
+            if(fStatus) filtered = filtered.filter(d => d.status === fStatus);
+
+            document.getElementById('report-body').innerHTML = filtered.length ? filtered.map(item => `
+                <tr>
+                    <td>${item.no}</td>
+                    <td><b>${item.nama}</b></td>
+                    <td>${item.tanggal}</td>
+                    <td>${item.task}</td>
+                    <td>${item.deadline || '-'}</td>
+                    <td>${item.keterangan || ''}</td>
+                    <td>
+                        <select class="status-select status-${item.status.replace(/\s+/g, '')}" onchange="updateStatus('${item.id}', this.value, this)">
+                            <option value="Belum" ${item.status === 'Belum' ? 'selected':''}>Belum</option>
+                            <option value="On Progress" ${item.status === 'On Progress' ? 'selected':''}>On Progress</option>
+                            <option value="Selesai" ${item.status === 'Selesai' ? 'selected':''}>Selesai</option>
+                            <option value="Cancel" ${item.status === 'Cancel' ? 'selected':''}>Cancel</option>
+                        </select>
+                    </td>
+                    <td>
+                        <button class="btn btn-danger" onclick="deleteTag('${item.id}')">🗑️</button>
+                    </td>
+                </tr>
+            `).join('') : '<tr><td colspan="8" style="text-align:center; color:#9ca3af; padding:20px;">Tidak ada data laporan.</td></tr>';
+        }
+
+        function updateStatus(id, val, el) {
+            const idx = db.findIndex(d => d.id === id);
+            if(idx !== -1) {
+                db[idx].status = val;
+                localStorage.setItem('daily_report_db', JSON.stringify(db));
+                el.className = `status-select status-${val.replace(/\s+/g, '')}`;
+            }
+        }
+
+        function deleteTag(id) {
+            if(confirm('Apakah Anda yakin ingin menghapus To Do ini?')) {
+                db = db.filter(d => d.id !== id);
+                localStorage.setItem('daily_report_db', JSON.stringify(db));
+                renderReport();
+            }
+        }
+
+        // --- HISTORY LOGIC ---
+        function renderHistory() {
+            const dates = [...new Set(db.map(d => d.tanggal))].sort().reverse();
+            document.getElementById('history-list').innerHTML = dates.length ? dates.map(d => `
+                <div style="padding:12px 16px; border:1px solid #e5e7eb; background:#fff; margin-bottom:8px; border-radius:6px; cursor:pointer; display:flex; justify-content:space-between; align-items:center;" onclick="switchPage('report'); initReport('${d}')">
+                    <div>
+                        <b style="color:#2563eb;">📅 ${d}</b>
+                        <span style="color:#6b7280; margin-left:10px; font-size:13px;">(${db.filter(x => x.tanggal === d).length} To Do List)</span>
+                    </div>
+                    <span style="color:#9ca3af; font-size:12px;">Lihat Detail &rarr;</span>
+                </div>
+            `).join('') : '<p style="color:#9ca3af;">Belum ada riwayat laporan tersimpan.</p>';
+        }
+
+        // --- EXPORT MULTI-TAB EXCEL (.XLSX) ---
+        function exportMultiTabExcel() {
+            const fDate = document.getElementById('report-date').value;
+            const fName = document.getElementById('report-name').value;
+            const fStatus = document.getElementById('report-status').value;
+            
+            let filteredData = db.filter(d => {
+                let match = true;
+                if(fDate && d.tanggal !== fDate) match = false;
+                if(fName && d.nama !== fName) match = false;
+                if(fStatus && d.status !== fStatus) match = false;
+                return match;
+            });
+
+            if(!filteredData.length) return alert('Tidak ada data yang cocok untuk diexport.');
+
+            const groupedByPIC = {};
+            filteredData.forEach(item => {
+                if(!groupedByPIC[item.nama]) groupedByPIC[item.nama] = [];
+                groupedByPIC[item.nama].push(item);
+            });
+
+            const wb = XLSX.utils.book_new();
+
+            for(const [picName, tasks] of Object.entries(groupedByPIC)) {
+                tasks.sort((a, b) => new Date(a.tanggal) - new Date(b.tanggal));
+
+                let rawRows = [];
+                let merges = [];
+                let currentDateGroup = "";
+                let rowIndex = 0; 
+
+                // Header Kolom
+                rawRows.push(["No", "Nama", "Tanggal", "To Do List", "Deadline", "Keterangan", "Status"]);
+                rowIndex++;
+
+                tasks.forEach(item => {
+                    if (item.tanggal !== currentDateGroup) {
+                        if (currentDateGroup !== "") {
+                            rawRows.push(["", "", "", "", "", "", ""]);
+                            rowIndex++;
+                        }
+                        currentDateGroup = item.tanggal;
+                        let noUrut = 1;
+
+                        rawRows.push([`📅 TANGGAL: ${currentDateGroup}`, "", "", "", "", "", ""]);
+                        merges.push({ s: { r: rowIndex, c: 0 }, e: { r: rowIndex, c: 6 } });
+                        rowIndex++;
+
+                        rawRows.push([noUrut++, item.nama, item.tanggal, item.task, item.deadline || "-", item.keterangan || "-", item.status]);
+                        rowIndex++;
+                    } else {
+                        let currentGroupTasks = tasks.filter(t => t.tanggal === currentDateGroup);
+                        let noUrut = currentGroupTasks.indexOf(item) + 1;
+
+                        rawRows.push([noUrut, item.nama, item.tanggal, item.task, item.deadline || "-", item.keterangan || "-", item.status]);
+                        rowIndex++;
+                    }
+                });
+
+                const ws = XLSX.utils.aoa_to_sheet(rawRows);
+                ws['!merges'] = merges;
+
+                // Set Styling Rata Tengah untuk Header Tanggal
+                merges.forEach(m => {
+                    let cellRef = XLSX.utils.encode_cell({ r: m.s.r, c: m.s.c });
+                    if (!ws[cellRef]) ws[cellRef] = { t: 's', v: '' };
+                    ws[cellRef].s = {
+                        alignment: { horizontal: "center", vertical: "center" },
+                        font: { bold: true, sz: 11 },
+                        fill: { fgColor: { rgb: "E5E7EB" } }
+                    };
+                });
+                
+                let safeSheetName = picName.replace(/[\/\\\?\*\[\]\:]/g, "").substring(0, 31);
+                XLSX.utils.book_append_sheet(wb, ws, safeSheetName);
+            }
+
+            XLSX.writeFile(wb, `Daily_Report.xlsx`);
+        }
+
+        // --- COPY FORMAT WA LOGIC DENGAN BOLD HANYA NAMA DAN TANGGAL ---
+        function copyFormatWA() {
+            const fDate = document.getElementById('report-date').value;
+            const fName = document.getElementById('report-name').value;
+            const fStatus = document.getElementById('report-status').value;
+            
+            let filteredData = db.filter(d => {
+                let match = true;
+                if(fDate && d.tanggal !== fDate) match = false;
+                if(fName && d.nama !== fName) match = false;
+                if(fStatus && d.status !== fStatus) match = false;
+                return match;
+            });
+
+            if(!filteredData.length) return;
+
+            // Kelompokkan berdasarkan Nama lalu Tanggal
+            const grouped = {};
+            filteredData.forEach(item => {
+                const key = `${item.nama}_${item.tanggal}`;
+                if(!grouped[key]) grouped[key] = { nama: item.nama, tanggal: item.tanggal, tasks: [] };
+                grouped[key].tasks.push(item);
+            });
+
+            let txtContent = "";
+
+            Object.values(grouped).forEach(group => {
+                // Ubah format YYYY-MM-DD ke DD-MM-YYYY untuk Header
+                const dateParts = group.tanggal.split('-');
+                const dateDDMMYYYY = dateParts.length === 3 ? `${dateParts[2]}-${dateParts[1]}-${dateParts[0]}` : group.tanggal;
+                
+                // Header: Hanya Nama & Tanggal yang dicetak tebal (*)
+                txtContent += `To Do List *${group.nama} (${dateDDMMYYYY})*\n\n`;
+                
+                group.tasks.forEach((t, i) => {
+                    let line = `${i + 1}. ${t.task}`;
+                    
+                    // Format Deadline (jika ada dan bukan '-')
+                    if (t.deadline && t.deadline !== '-' && t.deadline !== group.tanggal) {
+                        const dlParts = t.deadline.split('-');
+                        const dlDDMMYYYY = dlParts.length === 3 ? `${dlParts[2]}-${dlParts[1]}-${dlParts[0]}` : t.deadline;
+                        line += ` (dl : ${dlDDMMYYYY})`;
+                    }
+
+                    // Tambah Centang Hijau jika status Selesai
+                    if (t.status === 'Selesai') {
+                        line += `✅`;
+                    }
+                    
+                    txtContent += line + '\n';
+                });
+                txtContent += '\n'; // Jarak antar grup
+            });
+
+            // Salin teks langsung ke Clipboard tanpa popup alert
+            navigator.clipboard.writeText(txtContent.trim()).then(() => {
+                const btn = document.getElementById('btn-copy-wa');
+                if (btn) {
+                    const originalText = btn.innerHTML;
+                    btn.innerHTML = '✅ Tersalin!';
+                    btn.style.backgroundColor = '#16a34a'; // Berubah warna hijau
+                    
+                    // Kembalikan ke tampilan awal setelah 2 detik
+                    setTimeout(() => {
+                        btn.innerHTML = originalText;
+                        btn.style.backgroundColor = '';
+                    }, 2000);
+                }
+            }).catch(err => {
+                console.error('Gagal menyalin teks: ', err);
+            });
+        }
+
+        // Initial Load
+        switchPage('dashboard');
+    </script>
+</body>
+</html>
