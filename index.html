@@ -490,7 +490,11 @@
                 let clientText = clientEl ? clientEl.value.trim() : '';
                 let taskText = textEl.value.trim();
                 let taskDeadline = deadlineEl ? deadlineEl.value : '';
-                let taskStatus = statusEl.value || 'Belum';
+                
+                // MENGHAPUS PAKSAAN 'Belum'
+                // Jika status tidak dipilih, biarkan menjadi string kosong ('')
+                let taskStatus = statusEl.value || ''; 
+                
                 let taskKet = ((taskStatus === 'Belum' || taskStatus === 'Cancel') && ketEl) ? ketEl.value.trim() : '';
 
                 if(taskText === '') return;
