@@ -3,648 +3,402 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Daily Team Report</title>
-    <!-- Library xlsx-js-style untuk export excel -->
-    <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
+    <title>Form & Update To Do List Tim</title>
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
-        body { background-color: #f3f4f6; color: #1f2937; padding-bottom: 40px; }
+        * { box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; }
+        body { background-color: #f3f4f6; padding: 20px; display: flex; justify-content: center; }
+        .container { background: #ffffff; padding: 25px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); width: 100%; max-width: 880px; }
+        h2 { color: #1e3a8a; text-align: center; margin-bottom: 5px; }
+        .date-badge { text-align: center; font-size: 13px; font-weight: 600; color: #4b5563; margin-bottom: 20px; background: #e0f2fe; padding: 4px 10px; border-radius: 20px; display: inline-block; width: 100%;}
+        label { font-weight: 600; font-size: 14px; margin-bottom: 6px; display: block; color: #374151; }
+        input, select, textarea { width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; margin-bottom: 15px; font-size: 14px;}
         
-        /* Navbar */
-        nav { background: #ffffff; border-bottom: 1px solid #e5e7eb; padding: 0 20px; display: flex; justify-content: space-between; align-items: center; height: 60px; position: sticky; top: 0; z-index: 10; }
-        .logo { font-weight: bold; font-size: 18px; color: #2563eb; display: flex; align-items: center; gap: 8px; }
-        .nav-tabs { display: flex; gap: 8px; }
-        .nav-tabs button { background: none; border: none; padding: 18px 12px; font-size: 14px; cursor: pointer; color: #4b5563; border-bottom: 3px solid transparent; font-weight: 500; }
-        .nav-tabs button.active { color: #2563eb; border-bottom-color: #2563eb; font-weight: 600; }
-        
-        /* Container & Cards */
-        .container { max-width: 1050px; margin: 20px auto; padding: 0 15px; }
-        .card { background: #ffffff; border-radius: 8px; border: 1px solid #e5e7eb; padding: 20px; margin-bottom: 20px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
-        .hidden { display: none !important; }
-        
-        /* Forms & Buttons */
-        h1 { font-size: 20px; font-weight: 700; margin-bottom: 6px; color: #111827; }
-        p.subtitle { color: #6b7280; font-size: 14px; margin-bottom: 16px; }
-        textarea { width: 100%; height: 200px; padding: 12px; border: 1px solid #d1d5db; border-radius: 6px; font-family: monospace; font-size: 13px; margin-bottom: 15px; outline: none; }
-        textarea:focus { border-color: #2563eb; box-shadow: 0 0 0 2px rgba(37,99,235,0.1); }
-        
-        button.btn { background: #2563eb; color: #ffffff; border: none; padding: 9px 16px; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 500; display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s ease; }
-        button.btn-green { background: #16a34a; }
-        button.btn-purple { background: #4f46e5; }
-        button.btn-danger { background: #dc2626; padding: 4px 8px; font-size: 12px; }
-        button.btn:hover { opacity: 0.9; }
-        
-        /* Stats Grid */
-        .grid-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 20px; }
-        .stat-box { background: #ffffff; padding: 14px; border-radius: 6px; border: 1px solid #e5e7eb; text-align: center; }
-        .stat-box label { font-size: 11px; text-transform: uppercase; color: #6b7280; font-weight: 600; }
-        .stat-box .num { font-size: 22px; font-weight: 700; margin-top: 4px; }
-        
-        /* Table */
-        .table-container { overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; font-size: 14px; margin-top: 10px; }
-        th, td { padding: 10px 12px; text-align: left; border-bottom: 1px solid #f3f4f6; }
-        th { background: #f9fafb; color: #4b5563; font-size: 12px; text-transform: uppercase; font-weight: 600; }
-        
-        /* Status Badges */
-        select.status-select { padding: 5px 10px; border-radius: 20px; border: 1px solid #d1d5db; font-size: 12px; font-weight: 600; cursor: pointer; outline: none; }
-        .status-Belum { background: #f3f4f6; color: #374151; border-color: #d1d5db; }
+        .task-row { display: flex; gap: 6px; margin-bottom: 10px; align-items: center; background: #f9fafb; padding: 8px; border-radius: 6px; border: 1px solid #e5e7eb; flex-wrap: wrap; }
+        .task-client-input { flex: 1; min-width: 110px; margin-bottom: 0; padding: 6px; font-size: 12px; border: 1px solid #d1d5db; border-radius: 6px; background: #ffffff; }
+        .task-edit-input { flex: 2; min-width: 160px; margin-bottom: 0; font-size: 13.5px; background: #ffffff; }
+        .task-deadline-input { width: 120px; margin-bottom: 0; padding: 6px; font-size: 12px; border: 1px solid #d1d5db; border-radius: 6px; background: #ffffff; }
+        .status-picker { width: 110px; padding: 6px; font-size: 12px; font-weight: 600; border-radius: 20px; margin-bottom: 0;}
+        .task-ket-input { flex: 1.2; min-width: 130px; margin-bottom: 0; padding: 6px; font-size: 12px; border: 1px solid #d1d5db; border-radius: 6px; background: #ffffff; display: none; }
+
+        button { background: #2563eb; color: white; border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; font-weight: 600; width: 100%; transition: 0.2s; }
+        button:hover { opacity: 0.9; }
+        .btn-add { background: #f3f4f6; color: #2563eb; border: 1px dashed #2563eb; margin-bottom: 10px; }
+        .btn-note-toggle { background: #f8fafc; color: #475569; border: 1px dashed #94a3b8; margin-bottom: 15px; text-align: left; font-size: 13px; }
+        .btn-submit { background: #16a34a; font-size: 15px; padding: 12px; margin-top: 10px; }
+        .section-box { display: none; margin-bottom: 20px; background: #eff6ff; border: 1px solid #bfdbfe; padding: 15px; border-radius: 8px; }
+        .help-text { font-size: 11px; color: #6b7280; display: block; margin-top: -10px; margin-bottom: 15px; }
+
+        #kpi-notification { display: none; margin-bottom: 15px; padding: 12px; border-radius: 8px; font-size: 13px; font-weight: 600; }
+
+        .status-Empty { background: #ffffff; color: #6b7280; border-color: #d1d5db; }
+        .status-Belum { background: #fee2e2; color: #991b1b; border-color: #fca5a5; }
         .status-OnProgress { background: #fef08a; color: #854d0e; border-color: #fde047; }
         .status-Selesai { background: #dcfce7; color: #166534; border-color: #86efac; }
-        .status-Cancel { background: #fee2e2; color: #991b1b; border-color: #fca5a5; }
-        
-        .alert-box { background: #eff6ff; border: 1px solid #bfdbfe; color: #1e40af; padding: 12px 16px; border-radius: 6px; font-size: 14px; margin-bottom: 20px; }
-        .filter-group { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; align-items: center; }
-        .filter-group input, .filter-group select { padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px; outline: none; }
+        .status-Cancel { background: #e5e7eb; color: #374151; border-color: #d1d5db; }
     </style>
 </head>
 <body>
 
-    <!-- Navbar -->
-    <nav>
-        <div class="logo">📋 Daily Team Report</div>
-        <div class="nav-tabs">
-            <button onclick="switchPage('dashboard')" id="tab-dashboard" class="active">Dashboard</button>
-            <button onclick="switchPage('import')" id="tab-import">Import WA</button>
-            <button onclick="switchPage('report')" id="tab-report">Daily Report</button>
-            <button onclick="switchPage('history')" id="tab-history">History</button>
-        </div>
-    </nav>
-
     <div class="container">
+        <h2>📝 To Do List & Update Harian</h2>
+        <div style="text-align: center;">
+            <span class="date-badge" id="realtime-date-badge">📅 Memuat Tanggal Real-Time...</span>
+        </div>
         
-        <!-- DASHBOARD PAGE -->
-        <div id="page-dashboard">
-            <div class="card">
-                <div class="filter-group">
-                    <label style="font-size:14px; font-weight:600;">Tanggal Laporan:</label>
-                    <input type="date" id="dash-date" onchange="renderDashboard()">
-                </div>
+        <label>Masukkan Nama Lengkap Anda (PIC)</label>
+        <input type="text" id="pic-name" placeholder="Contoh: Adi Julian (ketik lengkap)" oninput="checkExistingTasks()" onblur="formatPICInputName()" required>
+        <span class="help-text">Daftar tugas hari ini akan muncul otomatis setelah Anda mengetik nama lengkap PIC dengan benar.</span>
+
+        <div id="existing-section" class="section-box">
+            <div id="kpi-notification"></div>
+
+            <label style="color:#1e40af; margin-bottom:10px;">⚡ Daftar Tugas Hari Ini:</label>
+            <div id="existing-task-container"></div>
+            
+            <button type="button" class="btn-add" style="background:#ffffff;" onclick="addInlineTaskRow()">+ Tambah Tugas Baru Jam Ini</button>
+
+            <button type="button" id="btn-toggle-note" class="btn-note-toggle" onclick="toggleNoteField()">📝 + Tambah Catatan / Note Tambahan</button>
+            <div id="note-container" style="display: none; margin-bottom: 15px;">
+                <label style="color:#374151; margin-bottom:6px;">📌 Catatan Tambahan / Note:</label>
+                <textarea id="additional-note" placeholder="Tuliskan catatan atau instruksi tambahan di sini jika ada..." style="height:70px; resize:vertical; font-family:inherit; margin-bottom:0;"></textarea>
             </div>
-            <div class="grid-stats" id="dash-stats"></div>
-            <div class="alert-box" id="dash-summary">Belum ada data untuk diproses.</div>
-            <div class="card">
-                <h1>Rekap Per Anggota</h1>
-                <div class="table-container">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Nama</th>
-                                <th>Total To Do</th>
-                                <th>Selesai</th>
-                                <th>On Progress</th>
-                                <th>Belum</th>
-                                <th>Cancel</th>
-                                <th>Completion Rate</th>
-                            </tr>
-                        </thead>
-                        <tbody id="dash-recap-body"></tbody>
-                    </table>
-                </div>
-            </div>
+            
+            <input type="hidden" id="wa-number" value="6285721092783">
+            <button type="button" id="btn-submit-main" class="btn-submit" style="background:#16a34a;" onclick="saveAndUpdateAll()">💾 Simpan Perubahan & Kirim Rekap ke WA</button>
         </div>
-
-        <!-- IMPORT PAGE -->
-        <div id="page-import" class="hidden">
-            <div class="card">
-                <h1>Import WhatsApp</h1>
-                <p class="subtitle">Paste pesan WhatsApp di bawah ini. Jika deadline tidak ditulis, otomatis menggunakan tanggal hari ini.</p>
-                
-                <textarea id="wa-input" placeholder="To Do List *Widia (30-09-2026)*&#10;1. Lanjut Buat Brief LK 5-6 Oktober (dl : 30-09-2026)✅&#10;2. QC hasil content client tanpa deadline..."></textarea>
-                
-                <button class="btn" onclick="processImport()">Preview Data</button>
-            </div>
-
-            <div id="preview-card" class="card hidden">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; flex-wrap:wrap; gap:10px;">
-                    <h1>Preview Data Parsing</h1>
-                    <button class="btn btn-green" onclick="saveImportData()">Simpan & Update Status</button>
-                </div>
-                <div class="table-container">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Nama</th>
-                                <th>Tanggal</th>
-                                <th>To Do List</th>
-                                <th>Deadline</th>
-                                <th>Keterangan</th>
-                                <th>Status Terdeteksi</th>
-                            </tr>
-                        </thead>
-                        <tbody id="preview-body"></tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-
-        <!-- DAILY REPORT PAGE -->
-        <div id="page-report" class="hidden">
-            <div class="card">
-                <h1>Detail Laporan To Do List</h1>
-                <p class="subtitle">Kelola dan ubah status pengerjaan setiap To Do tim di sini.</p>
-                <div class="filter-group">
-                    <input type="date" id="report-date" onchange="renderReport()">
-                    <select id="report-name" onchange="renderReport()"><option value="">Semua Anggota</option></select>
-                    <select id="report-status" onchange="renderReport()">
-                        <option value="">Semua Status</option>
-                        <option value="Belum">Belum</option>
-                        <option value="On Progress">On Progress</option>
-                        <option value="Selesai">Selesai</option>
-                        <option value="Cancel">Cancel</option>
-                    </select>
-                    <button class="btn btn-green" onclick="exportMultiTabExcel()">Export Excel (Multi-Tab)</button>
-                    <!-- TOMBOL COPY FORMAT WA DENGAN INDIKATOR LANGSUNG -->
-                    <button class="btn btn-purple" id="btn-copy-wa" onclick="copyFormatWA()">Copy Format WA</button>
-                </div>
-                <div class="table-container">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>No</th>
-                                <th>Nama</th>
-                                <th>Tanggal</th>
-                                <th>To Do List</th>
-                                <th>Deadline</th>
-                                <th>Keterangan</th>
-                                <th>Status</th>
-                                <th>Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody id="report-body"></tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-
-        <!-- HISTORY PAGE -->
-        <div id="page-history" class="hidden">
-            <div class="card">
-                <h1>Riwayat Laporan Harian</h1>
-                <p class="subtitle">Klik pada tanggal untuk membuka laporan lengkap hari tersebut.</p>
-                <div id="history-list" style="margin-top:15px;"></div>
-            </div>
-        </div>
-
     </div>
 
     <script>
-        let db = JSON.parse(localStorage.getItem('daily_report_db')) || [];
-        let tempPreview = [];
+        // ⚠️ GANTI DENGAN URL WEB APP GOOGLE APPS SCRIPT ANDA:
+        const SCRIPT_URL = "MASUKKAN_URL_WEB_APP_GOOGLE_SCRIPT_ANDA_DI_SINI";
 
-        function switchPage(page) {
-            document.querySelectorAll('[id^="page-"]').forEach(el => el.classList.add('hidden'));
-            document.querySelectorAll('.nav-tabs button').forEach(el => el.classList.remove('active'));
-            document.getElementById(`page-${page}`).classList.remove('hidden');
-            document.getElementById(`tab-${page}`).classList.add('active');
+        const TEAM_CONFIG = JSON.parse(localStorage.getItem('kpi_team_config')) || {
+            'Content Writer': { target: 16, members: ['Anne', 'Ayunda', 'Natasya', 'Widia'], defaultPoint: 1.0, rules: [] },
+            'Graphic Designer': { target: 14, members: ['Muqita', 'Qalbi', 'Raditya', 'Ramsat'], defaultPoint: 1.0, rules: [{keyword:'carousel', point:3.5}] },
+            'Video Editor': { target: 9, members: ['Adi Julian', 'Ghaly', 'Raihani'], defaultPoint: 1.0, rules: [{keyword:'edukasi', point:2.25}] },
+            'Videografer': { target: 12, members: ['Dzakwan'], defaultPoint: 1.0, rules: [{keyword:'visit', point:6}, {keyword:'full', point:12}] },
+            'Social Media Specialist': { target: 14, members: ['Zhera'], defaultPoint: 2.0, rules: [{keyword:'visit', point:7}] },
+            'Marketing': { target: 14, members: ['Wanda'], defaultPoint: 1.0, rules: [{keyword:'proposal', point:6}] },
+            'Advertiser': { target: 12, members: ['Gerry', 'Ikmal'], defaultPoint: 1.5, rules: [] }
+        };
 
-            if(page === 'dashboard') initDashboard();
-            if(page === 'report') initReport();
-            if(page === 'history') renderHistory();
+        function toTitleCase(str) {
+            if (!str) return '';
+            return str.toLowerCase().replace(/(?:^|\s)\S/g, function(a) { return a.toUpperCase(); });
         }
 
-        function getToday() { return new Date().toISOString().split('T')[0]; }
+        function formatPICInputName() {
+            const inputEl = document.getElementById('pic-name');
+            if (inputEl) inputEl.value = toTitleCase(inputEl.value);
+        }
 
-        function parseIndoDate(str) {
-            if(!str) return getToday();
-            const parts = str.split(/[\/\-]/);
-            if(parts.length >= 2) {
-                let d = parts[0].padStart(2, '0');
-                let m = parts[1].padStart(2, '0');
-                let y = parts[2] ? (parts[2].length === 2 ? '20' + parts[2] : parts[2]) : new Date().getFullYear().toString();
-                return `${y}-${m}-${d}`;
+        function getTodayFormattedDDMMYYYY() {
+            const d = new Date();
+            const day = String(d.getDate()).padStart(2, '0');
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+            const year = d.getFullYear();
+            return `${day}-${month}-${year}`;
+        }
+
+        function getCurrentTimeWIB() {
+            const d = new Date();
+            const hours = String(d.getHours()).padStart(2, '0');
+            const minutes = String(d.getMinutes()).padStart(2, '0');
+            return `${hours}.${minutes} WIB`;
+        }
+
+        function formatDateToID(dateStr) {
+            if (!dateStr) return '';
+            if (dateStr.includes('-') && dateStr.split('-')[0].length === 2) return dateStr;
+            const parts = dateStr.split('-');
+            if (parts.length === 3) return `${parts[2]}-${parts[1]}-${parts[0]}`;
+            return dateStr;
+        }
+
+        window.onload = function() {
+            const d = new Date();
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            document.getElementById('realtime-date-badge').innerText = `📅 Hari ini: ${d.toLocaleDateString('id-ID', options)}`;
+        };
+
+        function getRoleByName(name) {
+            if (!name) return null;
+            const lower = name.trim().toLowerCase();
+            for (const [role, config] of Object.entries(TEAM_CONFIG)) {
+                if (config.members.some(m => m.toLowerCase() === lower)) return role;
             }
-            return str;
+            return null;
         }
 
-        function isDatePattern(str) {
-            return /^\d{1,2}[\/\-]\d{1,2}(?:[\/\-]\d{2,4})?$/.test(str.trim());
+        function parseTaskQtyAndPoin(name, taskText) {
+            if (!taskText) return { qty: 0, totalPoin: 0 };
+            const role = getRoleByName(name) || 'Content Writer';
+            const config = TEAM_CONFIG[role];
+            let basePt = config ? config.defaultPoint : 1.0;
+
+            if (config && config.rules) {
+                let lowerTask = taskText.toLowerCase();
+                for (let r of config.rules) {
+                    let kws = r.keyword.split(',').map(k=>k.trim().toLowerCase()).filter(k=>k);
+                    if (kws.some(kw => lowerTask.includes(kw))) { basePt = r.point; break; }
+                }
+            }
+
+            let qty = 1;
+            const rangeMatch = taskText.match(/(?:tgl|tanggal)?\s*(\d{1,2})\s*(?:-|s\/d|sampai)\s*(\d{1,2})/i);
+            const listMatch = taskText.match(/(?:tgl|tanggal)?\s*(\d{1,2}(?:\s*(?:,|&|\bdan\b)\s*\d{1,2})+)/i);
+
+            if (rangeMatch) {
+                const start = parseInt(rangeMatch[1], 10);
+                const end = parseInt(rangeMatch[2], 10);
+                if (end >= start && end <= 31 && start >= 1) qty = (end - start + 1);
+            } else if (listMatch) {
+                const numbers = listMatch[0].match(/\d{1,2}/g);
+                if (numbers) {
+                    const validDays = numbers.filter(n => parseInt(n, 10) >= 1 && parseInt(n, 10) <= 31);
+                    if (validDays.length > 0) qty = validDays.length;
+                }
+            }
+
+            return { qty: qty, totalPoin: basePt * qty };
         }
 
-        // --- PARSING LOGIC ---
-        function processImport() {
-            const text = document.getElementById('wa-input').value;
-            if(!text.trim()) return alert('Paste teks WhatsApp terlebih dahulu!');
+        function handleStatusChange(selectEl) {
+            const val = selectEl.value;
+            selectEl.className = 'status-picker status-' + (val ? val.replace(/\s+/g, '') : 'Empty');
+            const row = selectEl.closest('.task-row');
+            const ketInput = row.querySelector('.task-ket-input');
+            if (ketInput) {
+                if (val === 'Belum' || val === 'Cancel') {
+                    ketInput.style.display = 'block';
+                    ketInput.placeholder = (val === 'Cancel') ? 'Ket. alasan cancel...' : 'Ket. jika belum selesai...';
+                } else {
+                    ketInput.style.display = 'none';
+                }
+            }
+            updateKPICheck();
+        }
 
-            const lines = text.split('\n').map(l => l.trim());
-            let currentName = '', currentDate = '', count = 1;
-            tempPreview = [];
+        function updateKPICheck() {
+            const rawName = document.getElementById('pic-name').value.trim();
+            const name = toTitleCase(rawName);
+            const notificationEl = document.getElementById('kpi-notification');
+            const role = getRoleByName(name);
+            
+            if (!role) {
+                if (notificationEl) notificationEl.style.display = 'none';
+                return;
+            }
 
-            for(let line of lines) {
-                if(!line) continue;
+            const targetKPI = TEAM_CONFIG[role] ? TEAM_CONFIG[role].target : 10;
+            let grandTotalPoin = 0;
+            const taskRows = document.querySelectorAll('#existing-task-container .task-row');
+            
+            taskRows.forEach(row => {
+                let textEl = row.querySelector('.task-edit-input');
+                if (textEl && textEl.value.trim() !== '') {
+                    let res = parseTaskQtyAndPoin(name, textEl.value.trim());
+                    grandTotalPoin += res.totalPoin;
+                }
+            });
 
-                if(/^[^a-zA-Z]*to\s*do/i.test(line)) {
-                    const dateMatch = line.match(/(\d{1,2}[\/\-]\d{1,2}(?:[\/\-]\d{2,4})?)/);
-                    if(dateMatch) {
-                        currentDate = parseIndoDate(dateMatch[1]);
-                    } else {
-                        currentDate = currentDate || getToday();
+            if (notificationEl) {
+                notificationEl.style.display = 'block';
+                if (grandTotalPoin < targetKPI) {
+                    notificationEl.style.background = '#fef2f2';
+                    notificationEl.style.color = '#991b1b';
+                    notificationEl.style.border = '1px solid #fca5a5';
+                    notificationEl.innerHTML = `⚠️ <b>Perhatian (${role}):</b> Estimasi (${grandTotalPoin} Poin) belum mencapai Target KPI (${targetKPI} Poin).`;
+                } else {
+                    notificationEl.style.background = '#f0fdf4';
+                    notificationEl.style.color = '#166534';
+                    notificationEl.style.border = '1px solid #86efac';
+                    notificationEl.innerHTML = `✅ <b>Mantap (${role}):</b> Total estimasi (${grandTotalPoin} Poin) telah memenuhi Target KPI (${targetKPI} Poin)!`;
+                }
+            }
+        }
+
+        function toggleNoteField() {
+            const noteContainer = document.getElementById('note-container');
+            const btn = document.getElementById('btn-toggle-note');
+            if (noteContainer.style.display === 'none') {
+                noteContainer.style.display = 'block';
+                btn.innerText = '📝 - Sembunyikan Catatan / Note';
+            } else {
+                noteContainer.style.display = 'none';
+                btn.innerText = '📝 + Tambah Catatan / Note Tambahan';
+            }
+        }
+
+        let fetchTimeout = null;
+
+        async function checkExistingTasks() {
+            const rawName = document.getElementById('pic-name').value.trim();
+            const nameInput = toTitleCase(rawName);
+            const existingSection = document.getElementById('existing-section');
+            const container = document.getElementById('existing-task-container');
+
+            const role = getRoleByName(nameInput);
+            if (!role) {
+                existingSection.style.display = 'none';
+                return;
+            }
+
+            existingSection.style.display = 'block';
+
+            clearTimeout(fetchTimeout);
+            fetchTimeout = setTimeout(async () => {
+                let today = getTodayFormattedDDMMYYYY();
+                let userTasks = [];
+
+                if (SCRIPT_URL && !SCRIPT_URL.includes("MASUKKAN_URL_WEB_APP")) {
+                    try {
+                        let resp = await fetch(SCRIPT_URL);
+                        let allData = await resp.json();
+                        userTasks = allData.filter(d => d.tanggal === today && d.nama.toLowerCase() === nameInput.toLowerCase());
+                    } catch(e) {
+                        console.warn("Using offline mode");
                     }
-
-                    let rawName = line.replace(/^[^a-zA-Z]*to\s*do(?:\s*list)?/i, '');
-                    if(dateMatch) rawName = rawName.replace(dateMatch[0], '');
-                    rawName = rawName.replace(/\b(mengerjakan|hari\s*ini|task|untuk|dari|berikut|adalah)\b/gi, ' ');
-                    rawName = rawName.replace(/[^a-zA-Z\s]/g, ' ');
-                    currentName = rawName.replace(/\s+/g, ' ').trim();
-
-                    count = 1;
-                    continue;
                 }
 
-                if(currentName && currentDate) {
-                    let task = line.replace(/^[\d\-\.\*\)\s]+/, '').trim();
-                    task = task.replace(/\*+$/, '').trim(); 
-
-                    if(!task) continue;
-
-                    let statusTask = 'Belum';
-                    if (/✅|✔/.test(task)) {
-                        statusTask = 'Selesai';
-                        task = task.replace(/✅|✔/g, '').trim();
-                    }
-
-                    // Deteksi Deadline
-                    let deadlineVal = '';
-                    const dlMatch = task.match(/\(?(?:dl|deadline)\s*[:=]\s*([^)]+)\)?/i);
-                    if (dlMatch) {
-                        deadlineVal = parseIndoDate(dlMatch[1].trim());
-                        task = task.replace(/\(?(?:dl|deadline)\s*[:=]\s*[^)]+\)?/gi, '').trim();
-                    } else {
-                        deadlineVal = currentDate; // Fallback ke tanggal laporan/hari ini
-                    }
-
-                    let ket = '';
-                    const parentheticalMatch = task.match(/(.+?)\s*\((.+?)\)$/);
-                    
-                    if(parentheticalMatch) {
-                        const insideText = parentheticalMatch[2].trim();
-                        if(isDatePattern(insideText)) {
-                            task = parentheticalMatch[1].trim();
-                            ket = '';
-                        } else {
-                            task = parentheticalMatch[1].trim();
-                            ket = insideText;
-                        }
-                    }
-
-                    tempPreview.push({
-                        id: Math.random().toString(36).substr(2, 9),
-                        nama: currentName,
-                        tanggal: currentDate,
-                        no: count++,
-                        task: task,
-                        deadline: deadlineVal,
-                        keterangan: ket,
-                        status: statusTask
+                container.innerHTML = '';
+                if (userTasks.length === 0) {
+                    addInlineTaskRow();
+                } else {
+                    userTasks.forEach((t) => {
+                        let row = document.createElement('div');
+                        row.className = 'task-row';
+                        row.innerHTML = `
+                            <input type="text" class="task-client-input" value="${t.klien || ''}" placeholder="Klien...">
+                            <input type="text" class="task-edit-input" value="${t.task || ''}" placeholder="To Do List..." oninput="updateKPICheck()">
+                            <input type="date" class="task-deadline-input" value="${t.deadline ? t.deadline.split('-').reverse().join('-') : ''}">
+                            <select class="status-picker status-${(t.status || '').replace(/\s+/g, '') || 'Empty'}" onchange="handleStatusChange(this)">
+                                <option value="" ${!t.status ? 'selected disabled':''}>-- Status --</option>
+                                <option value="Belum" ${t.status === 'Belum' ? 'selected':''}>Belum</option>
+                                <option value="On Progress" ${t.status === 'On Progress' ? 'selected':''}>On Progress</option>
+                                <option value="Selesai" ${t.status === 'Selesai' ? 'selected':''}>Selesai</option>
+                                <option value="Cancel" ${t.status === 'Cancel' ? 'selected':''}>Cancel</option>
+                            </select>
+                            <input type="text" class="task-ket-input" value="${t.keterangan || ''}" placeholder="Keterangan..." style="${(t.status === 'Belum' || t.status === 'Cancel') ? 'display:block;' : 'display:none;'}">
+                            <button type="button" style="width:32px; background:#dc2626; color:white; border:none; border-radius:4px; padding:6px;" onclick="this.parentElement.remove(); updateKPICheck();">X</button>
+                        `;
+                        container.appendChild(row);
                     });
                 }
-            }
-
-            if(tempPreview.length === 0) {
-                return alert('Format tidak dikenali! Pastikan ada kata "To Do" di header.');
-            }
-
-            const tbody = document.getElementById('preview-body');
-            tbody.innerHTML = tempPreview.map(i => `
-                <tr>
-                    <td><b style="color:#2563eb">${i.nama}</b></td>
-                    <td>${i.tanggal}</td>
-                    <td>${i.task}</td>
-                    <td>${i.deadline}</td>
-                    <td>${i.keterangan || '<span style="color:#ccc;">-</span>'}</td>
-                    <td><span class="status-select status-${i.status}">${i.status}</span></td>
-                </tr>
-            `).join('');
-            document.getElementById('preview-card').classList.remove('hidden');
+                updateKPICheck();
+            }, 300);
         }
 
-        function saveImportData() {
-            let updatedCount = 0;
-            let addedCount = 0;
-
-            tempPreview.forEach(p => {
-                const existingIndex = db.findIndex(d => 
-                    d.nama.toLowerCase() === p.nama.toLowerCase() && 
-                    d.tanggal === p.tanggal && 
-                    d.task.toLowerCase() === p.task.toLowerCase()
-                );
-
-                if (existingIndex !== -1) {
-                    if (p.status === 'Selesai') {
-                        db[existingIndex].status = 'Selesai';
-                        updatedCount++;
-                    }
-                    if (p.deadline) {
-                        db[existingIndex].deadline = p.deadline;
-                    }
-                    if (p.keterangan) {
-                        db[existingIndex].keterangan = p.keterangan;
-                    }
-                } else {
-                    db.push(p);
-                    addedCount++;
-                }
-            });
-
-            localStorage.setItem('daily_report_db', JSON.stringify(db));
-            
-            document.getElementById('wa-input').value = '';
-            document.getElementById('preview-card').classList.add('hidden');
-            document.getElementById('dash-date').value = tempPreview[0].tanggal;
-            tempPreview = [];
-            
-            alert(`Berhasil sinkronisasi data!\n- Tugas baru ditambah: ${addedCount}\n- Status diperbarui jadi Selesai: ${updatedCount}`);
-            switchPage('dashboard');
-        }
-
-        // --- DASHBOARD LOGIC ---
-        function initDashboard() {
-            if(!document.getElementById('dash-date').value) document.getElementById('dash-date').value = getToday();
-            renderDashboard();
-        }
-
-        function renderDashboard() {
-            const filterDate = document.getElementById('dash-date').value;
-            const data = db.filter(d => d.tanggal === filterDate);
-            
-            const stats = { total: 0, selesai: 0, onprogress: 0, belum: 0, cancel: 0 };
-            const users = {};
-
-            data.forEach(d => {
-                stats.total++;
-                const key = d.status.toLowerCase().replace(/\s+/g, '');
-                if(stats[key] !== undefined) stats[key]++;
-                
-                if(!users[d.nama]) users[d.nama] = { total: 0, selesai: 0, onprogress: 0, belum: 0, cancel: 0 };
-                users[d.nama].total++;
-                if(users[d.nama][key] !== undefined) users[d.nama][key]++;
-            });
-
-            const validTotal = stats.total - stats.cancel;
-            const rate = validTotal > 0 ? ((stats.selesai / validTotal) * 100).toFixed(1) : 0;
-            const userCount = Object.keys(users).length;
-
-            document.getElementById('dash-stats').innerHTML = `
-                <div class="stat-box"><label>Anggota</label><div class="num">${userCount}</div></div>
-                <div class="stat-box"><label>Total To Do</label><div class="num">${stats.total}</div></div>
-                <div class="stat-box"><label>Selesai</label><div class="num" style="color:#16a34a">${stats.selesai}</div></div>
-                <div class="stat-box"><label>On Progress</label><div class="num" style="color:#ca8a04">${stats.onprogress}</div></div>
-                <div class="stat-box"><label>Belum</label><div class="num" style="color:#4b5563">${stats.belum}</div></div>
-                <div class="stat-box"><label>Completion</label><div class="num" style="color:#2563eb">${rate}%</div></div>
+        function addInlineTaskRow() {
+            const container = document.getElementById('existing-task-container');
+            let row = document.createElement('div');
+            row.className = 'task-row';
+            row.innerHTML = `
+                <input type="text" class="task-client-input" placeholder="Klien...">
+                <input type="text" class="task-edit-input" placeholder="To Do List baru hari ini..." oninput="updateKPICheck()">
+                <input type="date" class="task-deadline-input">
+                <select class="status-picker status-Empty" onchange="handleStatusChange(this)">
+                    <option value="" selected disabled>-- Status --</option>
+                    <option value="Belum">Belum</option>
+                    <option value="On Progress">On Progress</option>
+                    <option value="Selesai">Selesai</option>
+                    <option value="Cancel">Cancel</option>
+                </select>
+                <input type="text" class="task-ket-input" placeholder="Keterangan..." style="display: none;">
+                <button type="button" style="width:32px; background:#dc2626; color:white; border:none; border-radius:4px; padding:6px;" onclick="this.parentElement.remove(); updateKPICheck();">X</button>
             `;
-
-            document.getElementById('dash-summary').innerText = stats.total > 0 
-                ? `Hari ini terdapat ${stats.total} To Do dari ${userCount} tim. Sebanyak ${stats.selesai} To Do telah selesai, ${stats.onprogress} masih on progress, dan ${stats.belum} belum dikerjakan.`
-                : `Belum ada laporan yang di-import untuk tanggal ${filterDate}.`;
-
-            document.getElementById('dash-recap-body').innerHTML = Object.keys(users).length ? Object.entries(users).map(([name, s]) => {
-                const uValid = s.total - s.cancel;
-                const uRate = uValid > 0 ? ((s.selesai / uValid) * 100).toFixed(0) : 0;
-                return `<tr>
-                    <td><b>${name}</b></td>
-                    <td>${s.total}</td>
-                    <td style="color:#16a34a; font-weight:600;">${s.selesai}</td>
-                    <td style="color:#ca8a04; font-weight:600;">${s.onprogress}</td>
-                    <td>${s.belum}</td>
-                    <td style="color:#dc2626;">${s.cancel}</td>
-                    <td><b>${uRate}%</b></td>
-                </tr>`;
-            }).join('') : '<tr><td colspan="7" style="text-align:center; color:#9ca3af; padding:20px;">Tidak ada data.</td></tr>';
+            container.appendChild(row);
+            updateKPICheck();
         }
 
-        // --- REPORT & DETAIL LOGIC ---
-        function initReport(dateFilter = null) {
-            const dateInput = document.getElementById('report-date');
-            if(dateFilter) dateInput.value = dateFilter;
-            else if(!dateInput.value) dateInput.value = getToday();
+        async function saveAndUpdateAll() {
+            const rawName = document.getElementById('pic-name').value.trim();
+            if (!rawName) return alert('Masukkan Nama PIC terlebih dahulu!');
 
-            const names = [...new Set(db.map(d => d.nama))].sort();
-            const currentNameFilter = document.getElementById('report-name').value;
-            document.getElementById('report-name').innerHTML = '<option value="">Semua Anggota</option>' + 
-                names.map(n => `<option value="${n}" ${currentNameFilter === n ? 'selected':''}>${n}</option>`).join('');
-
-            renderReport();
-        }
-
-        function renderReport() {
-            const fDate = document.getElementById('report-date').value;
-            const fName = document.getElementById('report-name').value;
-            const fStatus = document.getElementById('report-status').value;
-
-            let filtered = db.filter(d => d.tanggal === fDate);
-            if(fName) filtered = filtered.filter(d => d.nama === fName);
-            if(fStatus) filtered = filtered.filter(d => d.status === fStatus);
-
-            document.getElementById('report-body').innerHTML = filtered.length ? filtered.map(item => `
-                <tr>
-                    <td>${item.no}</td>
-                    <td><b>${item.nama}</b></td>
-                    <td>${item.tanggal}</td>
-                    <td>${item.task}</td>
-                    <td>${item.deadline || '-'}</td>
-                    <td>${item.keterangan || ''}</td>
-                    <td>
-                        <select class="status-select status-${item.status.replace(/\s+/g, '')}" onchange="updateStatus('${item.id}', this.value, this)">
-                            <option value="Belum" ${item.status === 'Belum' ? 'selected':''}>Belum</option>
-                            <option value="On Progress" ${item.status === 'On Progress' ? 'selected':''}>On Progress</option>
-                            <option value="Selesai" ${item.status === 'Selesai' ? 'selected':''}>Selesai</option>
-                            <option value="Cancel" ${item.status === 'Cancel' ? 'selected':''}>Cancel</option>
-                        </select>
-                    </td>
-                    <td>
-                        <button class="btn btn-danger" onclick="deleteTag('${item.id}')">🗑️</button>
-                    </td>
-                </tr>
-            `).join('') : '<tr><td colspan="8" style="text-align:center; color:#9ca3af; padding:20px;">Tidak ada data laporan.</td></tr>';
-        }
-
-        function updateStatus(id, val, el) {
-            const idx = db.findIndex(d => d.id === id);
-            if(idx !== -1) {
-                db[idx].status = val;
-                localStorage.setItem('daily_report_db', JSON.stringify(db));
-                el.className = `status-select status-${val.replace(/\s+/g, '')}`;
-            }
-        }
-
-        function deleteTag(id) {
-            if(confirm('Apakah Anda yakin ingin menghapus To Do ini?')) {
-                db = db.filter(d => d.id !== id);
-                localStorage.setItem('daily_report_db', JSON.stringify(db));
-                renderReport();
-            }
-        }
-
-        // --- HISTORY LOGIC ---
-        function renderHistory() {
-            const dates = [...new Set(db.map(d => d.tanggal))].sort().reverse();
-            document.getElementById('history-list').innerHTML = dates.length ? dates.map(d => `
-                <div style="padding:12px 16px; border:1px solid #e5e7eb; background:#fff; margin-bottom:8px; border-radius:6px; cursor:pointer; display:flex; justify-content:space-between; align-items:center;" onclick="switchPage('report'); initReport('${d}')">
-                    <div>
-                        <b style="color:#2563eb;">📅 ${d}</b>
-                        <span style="color:#6b7280; margin-left:10px; font-size:13px;">(${db.filter(x => x.tanggal === d).length} To Do List)</span>
-                    </div>
-                    <span style="color:#9ca3af; font-size:12px;">Lihat Detail &rarr;</span>
-                </div>
-            `).join('') : '<p style="color:#9ca3af;">Belum ada riwayat laporan tersimpan.</p>';
-        }
-
-        // --- EXPORT MULTI-TAB EXCEL (.XLSX) ---
-        function exportMultiTabExcel() {
-            const fDate = document.getElementById('report-date').value;
-            const fName = document.getElementById('report-name').value;
-            const fStatus = document.getElementById('report-status').value;
+            const name = toTitleCase(rawName);
+            const role = getRoleByName(name) || 'Content Writer';
+            const targetNumber = document.getElementById('wa-number').value.trim();
+            const todayStr = getTodayFormattedDDMMYYYY();
+            const jamKirimStr = getCurrentTimeWIB();
             
-            let filteredData = db.filter(d => {
-                let match = true;
-                if(fDate && d.tanggal !== fDate) match = false;
-                if(fName && d.nama !== fName) match = false;
-                if(fStatus && d.status !== fStatus) match = false;
-                return match;
-            });
+            const taskRows = document.querySelectorAll('#existing-task-container .task-row');
+            if (taskRows.length === 0) return alert('Minimal harus ada 1 tugas!');
 
-            if(!filteredData.length) return alert('Tidak ada data yang cocok untuk diexport.');
+            let tasksToSave = [];
+            let waTasksList = [];
 
-            const groupedByPIC = {};
-            filteredData.forEach(item => {
-                if(!groupedByPIC[item.nama]) groupedByPIC[item.nama] = [];
-                groupedByPIC[item.nama].push(item);
-            });
+            taskRows.forEach((row) => {
+                let clientEl = row.querySelector('.task-client-input');
+                let textEl = row.querySelector('.task-edit-input');
+                let deadlineEl = row.querySelector('.task-deadline-input');
+                let statusEl = row.querySelector('.status-picker');
+                let ketEl = row.querySelector('.task-ket-input');
 
-            const wb = XLSX.utils.book_new();
+                let clientText = clientEl ? clientEl.value.trim() : '';
+                let taskText = textEl ? textEl.value.trim() : '';
+                let taskDeadline = deadlineEl && deadlineEl.value ? formatDateToID(deadlineEl.value) : '';
+                let taskStatus = statusEl ? statusEl.value || 'Belum' : 'Belum';
+                let taskKet = ((taskStatus === 'Belum' || taskStatus === 'Cancel') && ketEl) ? ketEl.value.trim() : '';
 
-            for(const [picName, tasks] of Object.entries(groupedByPIC)) {
-                tasks.sort((a, b) => new Date(a.tanggal) - new Date(b.tanggal));
+                if(taskText === '') return;
 
-                let rawRows = [];
-                let merges = [];
-                let currentDateGroup = "";
-                let rowIndex = 0; 
+                let parsed = parseTaskQtyAndPoin(name, taskText);
+                let finalPoin = taskStatus === 'Selesai' ? parsed.totalPoin : 0;
+                let fullTaskText = clientText ? `[${clientText}] ${taskText}` : taskText;
 
-                // Header Kolom
-                rawRows.push(["No", "Nama", "Tanggal", "To Do List", "Deadline", "Keterangan", "Status"]);
-                rowIndex++;
-
-                tasks.forEach(item => {
-                    if (item.tanggal !== currentDateGroup) {
-                        if (currentDateGroup !== "") {
-                            rawRows.push(["", "", "", "", "", "", ""]);
-                            rowIndex++;
-                        }
-                        currentDateGroup = item.tanggal;
-                        let noUrut = 1;
-
-                        rawRows.push([`📅 TANGGAL: ${currentDateGroup}`, "", "", "", "", "", ""]);
-                        merges.push({ s: { r: rowIndex, c: 0 }, e: { r: rowIndex, c: 6 } });
-                        rowIndex++;
-
-                        rawRows.push([noUrut++, item.nama, item.tanggal, item.task, item.deadline || "-", item.keterangan || "-", item.status]);
-                        rowIndex++;
-                    } else {
-                        let currentGroupTasks = tasks.filter(t => t.tanggal === currentDateGroup);
-                        let noUrut = currentGroupTasks.indexOf(item) + 1;
-
-                        rawRows.push([noUrut, item.nama, item.tanggal, item.task, item.deadline || "-", item.keterangan || "-", item.status]);
-                        rowIndex++;
-                    }
+                tasksToSave.push({
+                    nama: name,
+                    divisi: role,
+                    tanggal: todayStr,
+                    jamKirim: jamKirimStr,
+                    task: fullTaskText,
+                    qty: parsed.qty,
+                    poin: finalPoin,
+                    deadline: taskDeadline,
+                    status: taskStatus,
+                    keterangan: taskKet
                 });
 
-                const ws = XLSX.utils.aoa_to_sheet(rawRows);
-                ws['!merges'] = merges;
-
-                // Set Styling Rata Tengah untuk Header Tanggal
-                merges.forEach(m => {
-                    let cellRef = XLSX.utils.encode_cell({ r: m.s.r, c: m.s.c });
-                    if (!ws[cellRef]) ws[cellRef] = { t: 's', v: '' };
-                    ws[cellRef].s = {
-                        alignment: { horizontal: "center", vertical: "center" },
-                        font: { bold: true, sz: 11 },
-                        fill: { fgColor: { rgb: "E5E7EB" } }
-                    };
-                });
-                
-                let safeSheetName = picName.replace(/[\/\\\?\*\[\]\:]/g, "").substring(0, 31);
-                XLSX.utils.book_append_sheet(wb, ws, safeSheetName);
-            }
-
-            XLSX.writeFile(wb, `Daily_Report.xlsx`);
-        }
-
-        // --- COPY FORMAT WA LOGIC DENGAN BOLD HANYA NAMA DAN TANGGAL ---
-        function copyFormatWA() {
-            const fDate = document.getElementById('report-date').value;
-            const fName = document.getElementById('report-name').value;
-            const fStatus = document.getElementById('report-status').value;
-            
-            let filteredData = db.filter(d => {
-                let match = true;
-                if(fDate && d.tanggal !== fDate) match = false;
-                if(fName && d.nama !== fName) match = false;
-                if(fStatus && d.status !== fStatus) match = false;
-                return match;
+                waTasksList.push({ client: clientText, task: taskText, status: taskStatus, deadline: taskDeadline, keterangan: taskKet });
             });
 
-            if(!filteredData.length) return;
-
-            // Kelompokkan berdasarkan Nama lalu Tanggal
-            const grouped = {};
-            filteredData.forEach(item => {
-                const key = `${item.nama}_${item.tanggal}`;
-                if(!grouped[key]) grouped[key] = { nama: item.nama, tanggal: item.tanggal, tasks: [] };
-                grouped[key].tasks.push(item);
-            });
-
-            let txtContent = "";
-
-            Object.values(grouped).forEach(group => {
-                // Ubah format YYYY-MM-DD ke DD-MM-YYYY untuk Header
-                const dateParts = group.tanggal.split('-');
-                const dateDDMMYYYY = dateParts.length === 3 ? `${dateParts[2]}-${dateParts[1]}-${dateParts[0]}` : group.tanggal;
-                
-                // Header: Hanya Nama & Tanggal yang dicetak tebal (*)
-                txtContent += `To Do List *${group.nama} (${dateDDMMYYYY})*\n\n`;
-                
-                group.tasks.forEach((t, i) => {
-                    let line = `${i + 1}. ${t.task}`;
-                    
-                    // Format Deadline (jika ada dan bukan '-')
-                    if (t.deadline && t.deadline !== '-' && t.deadline !== group.tanggal) {
-                        const dlParts = t.deadline.split('-');
-                        const dlDDMMYYYY = dlParts.length === 3 ? `${dlParts[2]}-${dlParts[1]}-${dlParts[0]}` : t.deadline;
-                        line += ` (dl : ${dlDDMMYYYY})`;
-                    }
-
-                    // Tambah Centang Hijau jika status Selesai
-                    if (t.status === 'Selesai') {
-                        line += `✅`;
-                    }
-                    
-                    txtContent += line + '\n';
-                });
-                txtContent += '\n'; // Jarak antar grup
-            });
-
-            // Salin teks langsung ke Clipboard tanpa popup alert
-            navigator.clipboard.writeText(txtContent.trim()).then(() => {
-                const btn = document.getElementById('btn-copy-wa');
-                if (btn) {
-                    const originalText = btn.innerHTML;
-                    btn.innerHTML = '✅ Tersalin!';
-                    btn.style.backgroundColor = '#16a34a'; // Berubah warna hijau
-                    
-                    // Kembalikan ke tampilan awal setelah 2 detik
-                    setTimeout(() => {
-                        btn.innerHTML = originalText;
-                        btn.style.backgroundColor = '';
-                    }, 2000);
+            const submitBtn = document.getElementById('btn-submit-main');
+            if (SCRIPT_URL && !SCRIPT_URL.includes("https://script.google.com/macros/s/AKfycbwARwDuSiqlfHrX2H0kEjkRYfUCOxq8xhPwPg3JRwFb11PcmQx-IrrAR1q1ivHhVnT3MA/exec")) {
+                submitBtn.disabled = true;
+                submitBtn.innerText = "⌛ Menyimpan ke Tab " + name + "...";
+                try {
+                    await fetch(SCRIPT_URL, {
+                        method: 'POST',
+                        mode: 'no-cors',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ action: 'save', tasks: tasksToSave, today: todayStr, nama: name })
+                    });
+                } catch (e) {
+                    console.error("Error saving to sheet", e);
                 }
-            }).catch(err => {
-                console.error('Gagal menyalin teks: ', err);
-            });
-        }
+                submitBtn.disabled = false;
+                submitBtn.innerText = "💾 Simpan Perubahan & Kirim Rekap ke WA";
+            }
 
-        // Initial Load
-        switchPage('dashboard');
+            let waText = `To Do List *${name} (${todayStr.replace(/-/g, '/')})* :\n\n`;
+            let ketList = [];
+
+            waTasksList.forEach((t, i) => {
+                let statusIcon = t.status === 'Selesai' ? " ✅" : (t.status === 'Belum' ? " ❌" : " ⏳");
+                let clientPrefix = t.client ? `[${t.client}] ` : '';
+                let dlText = t.deadline ? ` [DL: ${t.deadline}]` : '';
+                
+                waText += `${i + 1}. ${clientPrefix}${t.task}${dlText}${statusIcon}\n`;
+                if (t.keterangan) ketList.push(`${i + 1}. ${t.keterangan}`);
+            });
+
+            if (ketList.length > 0) {
+                waText += `\nKeterangan Belum Selesai / Cancel :\n` + ketList.join('\n') + '\n';
+            }
+
+            alert(`Data berhasil disimpan di Tab "${name}" Google Sheets!`);
+            window.location.href = `https://api.whatsapp.com/send?phone=${targetNumber}&text=${encodeURIComponent(waText)}`;
+        }
     </script>
 </body>
 </html>
