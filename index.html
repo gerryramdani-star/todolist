@@ -411,7 +411,10 @@
             let today = getTodayISO();
             
             // Ubah pemisah titik menjadi titik dua (:) agar dibaca sebagai Format Waktu di Spreadsheet
-            let currentTime = new Date().toLocaleTimeString('id-ID', {hour: '2-digit', minute:'2-digit'}).replace('.', ':');
+            let now = new Date();
+            let hours = String(now.getHours()).padStart(2, '0');
+            let minutes = String(now.getMinutes()).padStart(2, '0');
+            let currentTime = "'" + hours + "." + minutes; // Tanda petik memaksa Sheets membacanya sebagai TEKS murni
             
             const taskRows = document.querySelectorAll('#existing-task-container .task-row');
             if (taskRows.length === 0) {
