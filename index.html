@@ -91,17 +91,28 @@
 
     <script>
         // PASTIKAN URL INI ADALAH URL DEPLOY TERBARU ANDA
-        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxQbvTDEz1RjnUpNjHQUWKoJMo0yQPYvIR5383LuxNcsWXgXCjjM4xri725udGb2hTo/exec';
+        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxIKWvoJE5_OsfA64mCAJ3tPLTLez2-hFt8Dgt-8i3OwsIqFzcqbUhIsGZs2nqXEdqusg/exec'; // Tetap gunakan URL Web App Anda
 
         const TEAM_CONFIG = JSON.parse(localStorage.getItem('kpi_team_config')) || {
             'Content Writer': { target: 16, members: ['Anne', 'Natasya', 'Widia'], defaultPoint: 1.0, rules: [] },
-            'KOL Specialist': { target: 18, members: ['Ayunda'], defaultPoint: 1.5, rules: [{keyword:'report', point:6}] },
             'Graphic Designer': { target: 14, members: ['Muqita', 'Qalbi', 'Raditya', 'Ramsat'], defaultPoint: 1.0, rules: [{keyword:'carousel', point:3.5}] },
             'Video Editor': { target: 9, members: ['Adi Julian', 'Ghaly', 'Raihani'], defaultPoint: 1.0, rules: [{keyword:'edukasi', point:2.25}] },
             'Videografer': { target: 12, members: ['Dzakwan'], defaultPoint: 1.0, rules: [{keyword:'visit', point:6}, {keyword:'full', point:12}] },
             'Social Media Specialist': { target: 14, members: ['Zhera'], defaultPoint: 2.0, rules: [{keyword:'visit', point:7}] },
             'Marketing': { target: 14, members: ['Wanda'], defaultPoint: 1.0, rules: [{keyword:'proposal', point:6}] },
-            'Advertiser': { target: 12, members: ['Gerry', 'Ikmal'], defaultPoint: 1.5, rules: [] }
+            'Advertiser': { target: 12, members: ['Gerry', 'Ikmal'], defaultPoint: 1.5, rules: [] },
+            'KOL Specialist': { 
+                target: 10, 
+                members: ['Ayunda'], 
+                defaultPoint: 1.0, 
+                rules: [
+                    {keyword:'report bulanan', point: 6},
+                    {keyword:'brief campaign', point: 6},
+                    {keyword:'riset, meet, briefing', point: 2.5},
+                    {keyword:'approuch', point: 0.3}, // Typo mengikuti gambar
+                    {keyword:'rekomendasi', point: 0.5}
+                ]
+            }
         };
 
         function toTitleCase(str) {
@@ -515,7 +526,10 @@
                 let statusIcon = "";
                 if (t.status === 'Selesai') {
                     statusIcon = " ✅";
-                } 
+                } else if (t.status === 'Belum') {
+                    statusIcon = " ❌";
+                }
+
                 let clientPrefix = t.client ? `[${t.client}] ` : '';
                 
                 let dlText = "";
