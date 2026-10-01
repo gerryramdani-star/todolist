@@ -272,7 +272,9 @@
             taskRows.forEach(row => {
                 let textEl = row.querySelector('.task-edit-input');
                 let statusEl = row.querySelector('.status-picker');
-                if (textEl && textEl.value.trim() !== '' && statusEl && statusEl.value === 'Selesai') {
+                
+                // MENGHITUNG ESTIMASI: Dihitung selama tugas ada isinya dan status BUKAN 'Cancel'
+                if (textEl && textEl.value.trim() !== '' && statusEl && statusEl.value !== 'Cancel') {
                     let res = parseTaskQtyAndPoin(name, textEl.value.trim());
                     grandTotalPoin += res.totalPoin;
                 }
