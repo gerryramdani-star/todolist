@@ -91,7 +91,7 @@
 
     <script>
         // PASTIKAN URL INI ADALAH URL DEPLOY TERBARU ANDA
-        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw5ig3cQ8bttJiVGUVK8Wk8lV3oejdJLimEC7q5mZz7nJvir-DoGgPoeFrX0_ocKTjm/exec';
+        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxIKWvoJE5_OsfA64mCAJ3tPLTLez2-hFt8Dgt-8i3OwsIqFzcqbUhIsGZs2nqXEdqusg/exec';
 
         const TEAM_CONFIG = JSON.parse(localStorage.getItem('kpi_team_config')) || {
             'Content Writer': { target: 16, members: ['Anne', 'Natasya', 'Widia'], defaultPoint: 1.0, rules: [] },
@@ -512,10 +512,11 @@
 
             waTasksList.forEach((t, i) => {
                 let statusIcon = "";
+                // Hanya beri ikon centang jika statusnya Selesai
                 if (t.status === 'Selesai') {
                     statusIcon = " ✅";
                 } 
-                }
+                // Status lain tidak diberi ikon apapun
 
                 let clientPrefix = t.client ? `[${t.client}] ` : '';
                 
