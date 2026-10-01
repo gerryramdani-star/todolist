@@ -14,7 +14,6 @@
         label { font-weight: 600; font-size: 14px; margin-bottom: 6px; display: block; color: #374151; }
         input, select, textarea { width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; margin-bottom: 15px; font-size: 14px;}
         
-        /* Baris Tugas Flex Layout */
         .task-row { display: flex; gap: 6px; margin-bottom: 10px; align-items: center; background: #f9fafb; padding: 8px; border-radius: 6px; border: 1px solid #e5e7eb; flex-wrap: wrap; }
         .task-client-input { flex: 1; min-width: 120px; margin-bottom: 0; padding: 6px; font-size: 12px; border: 1px solid #d1d5db; border-radius: 6px; background: #ffffff; }
         .task-edit-input { flex: 2; min-width: 160px; margin-bottom: 0; font-size: 13.5px; background: #ffffff; }
@@ -30,17 +29,13 @@
         .section-box { display: none; margin-bottom: 20px; background: #eff6ff; border: 1px solid #bfdbfe; padding: 15px; border-radius: 8px; }
         .help-text { font-size: 11px; color: #6b7280; display: block; margin-top: -10px; margin-bottom: 15px; }
 
-        /* Notifikasi Box KPI */
         #kpi-notification { display: none; margin-bottom: 15px; padding: 12px; border-radius: 8px; font-size: 13px; font-weight: 600; }
-
-        /* Status Styling di Form */
         .status-Empty, select.status-picker:invalid { background: #ffffff; color: #6b7280; border-color: #d1d5db; }
         .status-Belum { background: #fee2e2; color: #991b1b; border-color: #fca5a5; }
         .status-OnProgress { background: #fef08a; color: #854d0e; border-color: #fde047; }
         .status-Selesai { background: #dcfce7; color: #166534; border-color: #86efac; }
         .status-Cancel { background: #e5e7eb; color: #374151; border-color: #d1d5db; }
 
-        /* Custom Modal Styling */
         #custom-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; z-index: 1000; padding: 20px; }
         .modal-content { background: #ffffff; padding: 25px; border-radius: 12px; max-width: 400px; width: 100%; text-align: center; box-shadow: 0 10px 15px rgba(0,0,0,0.1); }
         .modal-content p { font-size: 15px; color: #374151; margin-bottom: 20px; font-weight: 500; }
@@ -56,12 +51,10 @@
         </div>
         
         <label>Masukkan Nama Lengkap Anda (PIC)</label>
-        <input type="text" id="pic-name" placeholder="Contoh: Adi Julian (ketik lengkap)" oninput="checkExistingTasks()" onblur="formatPICInputName()" required>
-        <span class="help-text">Daftar tugas hari ini akan muncul otomatis setelah Anda mengetik nama lengkap PIC dengan benar.</span>
+        <input type="text" id="pic-name" placeholder="Contoh: Adi Julian (ketik lengkap)" oninput="checkLocalTasks()" onblur="formatPICInputName()" required>
+        <span class="help-text">Ketik nama lengkap lalu klik area kosong di luar kolom ini untuk menyinkronkan data dari server.</span>
 
-        <!-- BAGIAN UTAMA -->
         <div id="existing-section" class="section-box">
-            <!-- Box Reminder KPI -->
             <div id="kpi-notification"></div>
 
             <label style="color:#1e40af; margin-bottom:10px;">⚡ Daftar Tugas Hari Ini (Bisa edit nama klien, redaksi, status, deadline, & keterangan):</label>
@@ -69,7 +62,6 @@
             
             <button type="button" class="btn-add" style="background:#ffffff;" onclick="addInlineTaskRow()">+ Tambah Tugas Baru Jam Ini</button>
 
-            <!-- TOMBOL FITUR CATATAN TAMBAHAN (NOTE) -->
             <button type="button" id="btn-toggle-note" class="btn-note-toggle" onclick="toggleNoteField()">📝 + Tambah Catatan / Note Tambahan</button>
             <div id="note-container" style="display: none; margin-bottom: 15px;">
                 <label style="color:#374151; margin-bottom:6px;">📌 Catatan Tambahan / Note:</label>
@@ -81,7 +73,6 @@
         </div>
     </div>
 
-    <!-- Elemen Custom Modal -->
     <div id="custom-modal">
         <div class="modal-content">
             <p id="modal-text"></p>
@@ -90,14 +81,29 @@
     </div>
 
     <script>
-        // PASTIKAN URL INI ADALAH URL DEPLOY TERBARU ANDA
-        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzSOwBgTzioLor1D9ZRX-0X9Cven1ECSumLB2YvZ5ExhhQfUz5kEhCBmJucaS9M7DqW/exec'; 
+        // 🔴🔴🔴🔴🔴 PASTE URL WEB APP ANDA DI SINI 🔴🔴🔴🔴🔴
+        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzo4oHEgdyBrNGuFiZAbMJE43eqFf2FZLT4iX8bBBSiJ9iWdsm0ILCBw3aj7P5bJmj3/exec'; 
 
-        const TEAM_CONFIG = JSON.parse(localStorage.getItem('kpi_team_config')) || {
+        const TEAM_CONFIG = {
             'Content Writer': { target: 16, members: ['Anne', 'Natasya', 'Widia'], defaultPoint: 1.0, rules: [] },
             'Graphic Designer': { target: 14, members: ['Muqita', 'Qalbi', 'Raditya', 'Ramsat'], defaultPoint: 1.0, rules: [{keyword:'carousel', point:3.5}] },
             'Video Editor': { target: 9, members: ['Adi Julian', 'Ghaly', 'Raihani'], defaultPoint: 1.0, rules: [{keyword:'edukasi', point:2.25}] },
             'Videografer': { target: 12, members: ['Dzakwan'], defaultPoint: 1.0, rules: [{keyword:'visit', point:6}, {keyword:'full', point:12}] },
+            'Advertiser': { target: 12, members: ['Gerry', 'Ikmal'], defaultPoint: 1.5, rules: [] },
+            'KOL Specialist': { 
+                target: 18, 
+                members: ['Ayunda'], 
+                defaultPoint: 1.0, 
+                rules: [
+                    {keyword:'report bulanan', point: 8},
+                    {keyword:'brief campaign', point: 8},
+                    {keyword:'riset, meet, briefing', point: 2.5},
+                    {keyword:'approuch', point: 0.3},
+                    {keyword:'rekomendasi', point: 0.5},
+                    {keyword:'finishing campaign', point: 1.3},
+                    {keyword:'finishing report', point: 1.3}
+                ]
+            },
             'Social Media Specialist': { 
                 target: 14, 
                 members: ['Zhera'], 
@@ -120,33 +126,17 @@
                     {keyword:'surat, mou', point: 0.7},
                     {keyword:'follow up, lead, crm', point: 0.35}
                 ] 
-            },
-            'Advertiser': { target: 12, members: ['Gerry', 'Ikmal'], defaultPoint: 1.5, rules: [] },
-            'KOL Specialist': { 
-                target: 18, 
-                members: ['Ayunda'], 
-                defaultPoint: 1.0, 
-                rules: [
-                    {keyword:'report bulanan', point: 8},
-                    {keyword:'brief campaign', point: 8},
-                    {keyword:'riset, meet, briefing', point: 2.5},
-                    {keyword:'approuch', point: 0.3},
-                    {keyword:'rekomendasi', point: 0.5},
-                    {keyword:'finishing campaign', point: 1.3},
-                    {keyword:'finishing report', point: 1.3}
-                ]
             }
         };
 
-        function toTitleCase(str) {
-            if (!str) return '';
-            return str.toLowerCase().replace(/(?:^|\s)\S/g, function(a) { return a.toUpperCase(); });
-        }
+        function toTitleCase(str) { return str ? str.toLowerCase().replace(/(?:^|\s)\S/g, function(a) { return a.toUpperCase(); }) : ''; }
 
+        // Memicu sinkronisasi dari server ketika klik di luar kotak input
         function formatPICInputName() {
             const inputEl = document.getElementById('pic-name');
             if (inputEl) {
                 inputEl.value = toTitleCase(inputEl.value);
+                fetchServerData(); // Sinkronisasi Cloud
             }
         }
 
@@ -165,10 +155,7 @@
             const text = document.getElementById('modal-text');
             const buttons = document.getElementById('modal-buttons');
             text.innerText = msg;
-            buttons.innerHTML = `
-                <button onclick="closeModal(true)" style="background:#dc2626; color:white;">Ya</button>
-                <button onclick="closeModal(false)" style="background:#6b7280; color:white;">Batal</button>
-            `;
+            buttons.innerHTML = `<button onclick="closeModal(true)" style="background:#dc2626; color:white;">Ya</button><button onclick="closeModal(false)" style="background:#6b7280; color:white;">Batal</button>`;
             modal.style.display = 'flex';
             modal.callback = callback;
         }
@@ -176,9 +163,7 @@
         function closeModal(result) {
             const modal = document.getElementById('custom-modal');
             modal.style.display = 'none';
-            if (result && typeof modal.callback === 'function') {
-                modal.callback();
-            }
+            if (result && typeof modal.callback === 'function') modal.callback();
         }
 
         function getTodayISO() {
@@ -193,9 +178,7 @@
             if (!dateStr) return '';
             if (dateStr.includes('/')) return dateStr;
             const parts = dateStr.split('-');
-            if (parts.length === 3) {
-                return `${parts[2]}/${parts[1]}/${parts[0]}`;
-            }
+            if (parts.length === 3) return `${parts[2]}/${parts[1]}/${parts[0]}`;
             return dateStr;
         }
 
@@ -224,7 +207,6 @@
 
         function parseTaskQtyAndPoin(name, taskText) {
             if (!taskText) return { qty: 0, totalPoin: 0 };
-            
             const role = getRoleByName(name) || 'Content Writer';
             const config = TEAM_CONFIG[role];
             let basePt = config ? config.defaultPoint : 1.0;
@@ -233,10 +215,7 @@
                 let lowerTask = taskText.toLowerCase();
                 for (let r of config.rules) {
                     let kws = r.keyword.split(',').map(k=>k.trim().toLowerCase()).filter(k=>k);
-                    if (kws.some(kw => lowerTask.includes(kw))) { 
-                        basePt = r.point; 
-                        break; 
-                    }
+                    if (kws.some(kw => lowerTask.includes(kw))) { basePt = r.point; break; }
                 }
             }
 
@@ -247,29 +226,20 @@
             if (rangeMatch) {
                 const start = parseInt(rangeMatch[1], 10);
                 const end = parseInt(rangeMatch[2], 10);
-                if (end >= start && end <= 31 && start >= 1) {
-                    qty = (end - start + 1);
-                }
+                if (end >= start && end <= 31 && start >= 1) qty = (end - start + 1);
             } else if (listMatch) {
                 const numbers = listMatch[0].match(/\d{1,2}/g);
                 if (numbers) {
-                    const validDays = numbers.filter(n => {
-                        let num = parseInt(n, 10);
-                        return num >= 1 && num <= 31;
-                    });
-                    if (validDays.length > 0) {
-                        qty = validDays.length;
-                    }
+                    const validDays = numbers.filter(n => { let num = parseInt(n, 10); return num >= 1 && num <= 31; });
+                    if (validDays.length > 0) qty = validDays.length;
                 }
             }
-
             return { qty: qty, totalPoin: basePt * qty };
         }
 
         function handleStatusChange(selectEl) {
             const val = selectEl.value;
             selectEl.className = 'status-picker status-' + (val ? val.replace(/\s+/g, '') : 'Empty');
-            
             const row = selectEl.closest('.task-row');
             const ketInput = row.querySelector('.task-ket-input');
             
@@ -301,7 +271,8 @@
             
             taskRows.forEach(row => {
                 let textEl = row.querySelector('.task-edit-input');
-                if (textEl && textEl.value.trim() !== '') {
+                let statusEl = row.querySelector('.status-picker');
+                if (textEl && textEl.value.trim() !== '' && statusEl && statusEl.value === 'Selesai') {
                     let res = parseTaskQtyAndPoin(name, textEl.value.trim());
                     grandTotalPoin += res.totalPoin;
                 }
@@ -335,7 +306,67 @@
             }
         }
 
-        function checkExistingTasks() {
+        // ==========================================
+        // FITUR BARU: TARIK DATA DARI GOOGLE SHEETS
+        // ==========================================
+        function fetchServerData() {
+            const rawName = document.getElementById('pic-name').value.trim();
+            if (!rawName) return;
+            const name = toTitleCase(rawName);
+            const role = getRoleByName(name);
+            const today = getTodayISO();
+
+            if (!role) {
+                checkLocalTasks();
+                return;
+            }
+
+            const existingSection = document.getElementById('existing-section');
+            const container = document.getElementById('existing-task-container');
+            existingSection.style.display = 'block';
+            
+            // Animasi Loading
+            container.innerHTML = `<div style="text-align:center; padding:15px; color:#2563eb; font-weight:600; background:#e0f2fe; border-radius:6px;">⏳ Menyinkronkan data dari server...</div>`;
+
+            if (GOOGLE_SCRIPT_URL === 'MASUKKAN_URL_WEB_APP_ANDA_DISINI') {
+                checkLocalTasks();
+                return;
+            }
+
+            // Melakukan request pembacaan data ke Google
+            fetch(`${GOOGLE_SCRIPT_URL}?action=getTasks&nama=${encodeURIComponent(name)}&tanggal=${today}`, { redirect: 'follow' })
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === 'sukses') {
+                    let db = JSON.parse(localStorage.getItem('daily_report_db')) || [];
+                    // Hapus data lokal hari ini, ganti dengan yang dari Server
+                    db = db.filter(d => !(d.tanggal === today && d.nama.toLowerCase() === name.toLowerCase()));
+                    
+                    data.data.forEach(item => {
+                        db.push({
+                            id: item.id,
+                            nama: name,
+                            klien: item.klien,
+                            tanggal: today,
+                            task: item.task,
+                            deadline: item.deadline,
+                            keterangan: item.keterangan,
+                            status: item.status
+                        });
+                    });
+                    localStorage.setItem('daily_report_db', JSON.stringify(db));
+                    checkLocalTasks(); // Tampilkan datanya
+                } else {
+                    checkLocalTasks();
+                }
+            })
+            .catch(err => {
+                console.error("Gagal sinkron, beralih ke lokal:", err);
+                checkLocalTasks();
+            });
+        }
+
+        function checkLocalTasks() {
             const rawName = document.getElementById('pic-name').value.trim();
             const nameInput = toTitleCase(rawName);
             const existingSection = document.getElementById('existing-section');
@@ -343,17 +374,14 @@
             container.innerHTML = '';
 
             const role = getRoleByName(nameInput);
-
             if (!role) {
                 existingSection.style.display = 'none';
-                const notificationEl = document.getElementById('kpi-notification');
-                if (notificationEl) notificationEl.style.display = 'none';
+                document.getElementById('kpi-notification').style.display = 'none';
                 return;
             }
 
             let db = JSON.parse(localStorage.getItem('daily_report_db')) || [];
             let today = getTodayISO();
-
             let userTasks = db.filter(d => d.tanggal === today && d.nama.toLowerCase() === nameInput.toLowerCase());
 
             existingSection.style.display = 'block';
@@ -429,11 +457,7 @@
 
         function saveAndUpdateAll() {
             const rawName = document.getElementById('pic-name').value.trim();
-            if (!rawName) {
-                showAlert('Masukkan Nama PIC terlebih dahulu!');
-                return;
-            }
-
+            if (!rawName) return showAlert('Masukkan Nama PIC terlebih dahulu!');
             const name = toTitleCase(rawName);
             document.getElementById('pic-name').value = name;
 
@@ -444,21 +468,15 @@
             let db = JSON.parse(localStorage.getItem('daily_report_db')) || [];
             let today = getTodayISO();
             
-            // Format waktu menggunakan titik dua (:) agar dibaca rapi di Spreadsheet
-            let now = new Date();
-            let hours = String(now.getHours()).padStart(2, '0');
-            let minutes = String(now.getMinutes()).padStart(2, '0');
-            let currentTime = hours + ":" + minutes; 
+            // Format waktu dengan tanda petik agar tidak diubah oleh google sheets
+            let currentTime = "'" + new Date().toLocaleTimeString('id-ID', {hour: '2-digit', minute:'2-digit'}).replace('.', ':'); 
             
             const taskRows = document.querySelectorAll('#existing-task-container .task-row');
-            if (taskRows.length === 0) {
-                showAlert('Minimal harus ada 1 tugas!');
-                return;
-            }
+            if (taskRows.length === 0) return showAlert('Minimal harus ada 1 tugas!');
 
             let processedIds = [];
             let waTasksList = [];
-            let exportData = []; // Data yang akan dikirim ke Spreadsheet
+            let exportData = []; 
 
             taskRows.forEach((row, index) => {
                 let rowId = row.getAttribute('data-id');
@@ -473,7 +491,6 @@
                 let taskText = textEl.value.trim();
                 let taskDeadline = deadlineEl ? deadlineEl.value : '';
                 let taskStatus = statusEl.value || 'Belum';
-                
                 let taskKet = ((taskStatus === 'Belum' || taskStatus === 'Cancel') && ketEl) ? ketEl.value.trim() : '';
 
                 if(taskText === '') return;
@@ -482,35 +499,17 @@
                 let finalPoin = taskStatus === 'Selesai' ? parsed.totalPoin : 0;
 
                 exportData.push({
-                    no: index + 1,
-                    nama: name,
-                    role: getRoleByName(name) || 'Content Writer',
-                    tanggal: today,
-                    waktuKirim: currentTime,
-                    klien: clientText,
-                    task: taskText,
-                    qty: parsed.qty,
-                    poin: finalPoin,
-                    deadline: taskDeadline,
-                    keterangan: taskKet,
-                    status: taskStatus
+                    no: index + 1, nama: name, role: getRoleByName(name) || 'Content Writer',
+                    tanggal: today, waktuKirim: currentTime, klien: clientText, task: taskText,
+                    qty: parsed.qty, poin: finalPoin, deadline: taskDeadline, keterangan: taskKet, status: taskStatus
                 });
 
-                if (rowId.startsWith('new_')) {
+                if (rowId.startsWith('new_') || rowId.startsWith('sync_')) {
                     let newObj = {
                         id: Math.random().toString(36).substr(2, 9) + Date.now().toString(36),
-                        nama: name,
-                        klien: clientText,
-                        role: getRoleByName(name) || 'Content Writer',
-                        tanggal: today,
-                        waktuKirim: currentTime,
-                        no: db.length + 1,
-                        task: taskText,
-                        qty: parsed.qty,
-                        poin: finalPoin,
-                        deadline: taskDeadline,
-                        keterangan: taskKet,
-                        status: taskStatus
+                        nama: name, klien: clientText, role: getRoleByName(name) || 'Content Writer',
+                        tanggal: today, waktuKirim: currentTime, no: db.length + 1, task: taskText,
+                        qty: parsed.qty, poin: finalPoin, deadline: taskDeadline, keterangan: taskKet, status: taskStatus
                     };
                     db.push(newObj);
                     processedIds.push(newObj.id);
@@ -518,14 +517,9 @@
                 } else {
                     let existingItem = db.find(d => d.id === rowId);
                     if (existingItem) {
-                        existingItem.nama = name;
-                        existingItem.klien = clientText;
-                        existingItem.task = taskText;
-                        existingItem.status = taskStatus;
-                        existingItem.deadline = taskDeadline;
-                        existingItem.qty = parsed.qty;
-                        existingItem.poin = finalPoin;
-                        existingItem.keterangan = taskKet;
+                        existingItem.nama = name; existingItem.klien = clientText; existingItem.task = taskText;
+                        existingItem.status = taskStatus; existingItem.deadline = taskDeadline;
+                        existingItem.qty = parsed.qty; existingItem.poin = finalPoin; existingItem.keterangan = taskKet;
                         processedIds.push(rowId);
                         waTasksList.push({ client: clientText, task: taskText, status: taskStatus, deadline: taskDeadline, keterangan: taskKet });
                     }
@@ -533,15 +527,12 @@
             });
 
             db = db.filter(d => {
-                if (d.tanggal === today && d.nama.toLowerCase() === name.toLowerCase()) {
-                    return processedIds.includes(d.id);
-                }
+                if (d.tanggal === today && d.nama.toLowerCase() === name.toLowerCase()) return processedIds.includes(d.id);
                 return true;
             });
-
             localStorage.setItem('daily_report_db', JSON.stringify(db));
 
-            // FORMAT PESAN WA BARU
+            // FORMAT PESAN WA
             let waText = `To Do List *${name}* *(${getTodayFormatted()})*:\n\n`;
             let ketList = [];
 
@@ -549,18 +540,13 @@
                 let statusIcon = "";
                 if (t.status === 'Selesai') {
                     statusIcon = " ✅";
-                } else if (t.status === 'Belum') {
-                    statusIcon = " ❌";
                 }
 
                 let clientPrefix = t.client ? `[${t.client}] ` : '';
-                
                 let dlText = "";
                 if (t.deadline) {
                     let formattedDL = formatDateToID(t.deadline);
-                    if (formattedDL) {
-                        dlText = ` [DL: ${formattedDL}]`;
-                    }
+                    if (formattedDL) dlText = ` [DL: ${formattedDL}]`;
                 }
                 
                 waText += `${i + 1}. ${clientPrefix}${t.task}${dlText}${statusIcon}\n`;
@@ -579,25 +565,15 @@
                 waText += `\nCatatan Tambahan :\n${additionalNote}\n`;
             }
 
-            // PENGIRIMAN KE SPREADSHEET
             const submitBtn = document.querySelector('.btn-submit');
             const originalBtnText = submitBtn.innerHTML;
             submitBtn.innerHTML = '⏳ Sedang Menyimpan ke Spreadsheet...';
             submitBtn.disabled = true;
 
-            if (GOOGLE_SCRIPT_URL === 'MASUKKAN_URL_WEB_APP_ANDA_DISINI') {
-                submitBtn.innerHTML = originalBtnText;
-                submitBtn.disabled = false;
-                showAlert('⚠ URL Google Script belum dimasukkan! Data hanya dikirim ke WA.', () => {
-                    window.location.href = `https://api.whatsapp.com/send?phone=${targetNumber}&text=${encodeURIComponent(waText)}`;
-                });
-                return;
-            }
-
             fetch(GOOGLE_SCRIPT_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                redirect: 'follow',
+                redirect: 'follow', // Penting agar tidak error di HP
                 body: JSON.stringify(exportData)
             })
             .then(response => response.json())
@@ -606,18 +582,17 @@
                 submitBtn.disabled = false;
                 
                 if (data.status === 'sukses') {
-                    showAlert('✅ Data berhasil diperbarui & disinkronkan ke Spreadsheet!', () => {
+                    showAlert('✅ Data berhasil diperbarui & disinkronkan!', () => {
                         window.location.href = `https://api.whatsapp.com/send?phone=${targetNumber}&text=${encodeURIComponent(waText)}`;
                     });
                 } else {
-                    // JIKA ADA ERROR DARI GOOGLE, MUNCULKAN PESANNYA
-                    showAlert('❌ GAGAL MENYIMPAN KE SPREADSHEET: ' + data.message);
+                    showAlert('❌ ERROR SPREADSHEET: ' + data.message);
                 }
             })
             .catch(error => {
                 submitBtn.innerHTML = originalBtnText;
                 submitBtn.disabled = false;
-                showAlert('❌ Gagal menghubungi server Google. Pastikan URL Web App sudah benar!');
+                showAlert(`❌ Gagal menghubungi server Google. Pesan: ${error}`);
                 console.error('Error simpan:', error);
             });
         }
