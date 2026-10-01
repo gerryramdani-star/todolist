@@ -91,15 +91,36 @@
 
     <script>
         // PASTIKAN URL INI ADALAH URL DEPLOY TERBARU ANDA
-        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxIKWvoJE5_OsfA64mCAJ3tPLTLez2-hFt8Dgt-8i3OwsIqFzcqbUhIsGZs2nqXEdqusg/exec'; // Tetap gunakan URL Web App Anda
+        const GOOGLE_SCRIPT_URL = 'PASTE_URL_BARU_DI_SINI'; 
 
         const TEAM_CONFIG = JSON.parse(localStorage.getItem('kpi_team_config')) || {
             'Content Writer': { target: 16, members: ['Anne', 'Natasya', 'Widia'], defaultPoint: 1.0, rules: [] },
             'Graphic Designer': { target: 14, members: ['Muqita', 'Qalbi', 'Raditya', 'Ramsat'], defaultPoint: 1.0, rules: [{keyword:'carousel', point:3.5}] },
             'Video Editor': { target: 9, members: ['Adi Julian', 'Ghaly', 'Raihani'], defaultPoint: 1.0, rules: [{keyword:'edukasi', point:2.25}] },
             'Videografer': { target: 12, members: ['Dzakwan'], defaultPoint: 1.0, rules: [{keyword:'visit', point:6}, {keyword:'full', point:12}] },
-            'Social Media Specialist': { target: 14, members: ['Zhera'], defaultPoint: 2.0, rules: [{keyword:'visit', point:7}] },
-            'Marketing': { target: 14, members: ['Wanda'], defaultPoint: 1.0, rules: [{keyword:'proposal', point:6}] },
+            'Social Media Specialist': { 
+                target: 14, 
+                members: ['Zhera'], 
+                defaultPoint: 1.0, 
+                rules: [
+                    {keyword:'visit full, 8 jam, visit half, 4 jam', point: 14},
+                    {keyword:'report, insight, monthly', point: 6},
+                    {keyword:'riset, reminder, meet, meeting', point: 2},
+                    {keyword:'upload, posting', point: 0.2}
+                ] 
+            },
+            'Marketing': { 
+                target: 14, 
+                members: ['Wanda'], 
+                defaultPoint: 1.0, 
+                rules: [
+                    {keyword:'revisi proposal, revisi deck', point: 4},
+                    {keyword:'proposal, deck', point: 6},
+                    {keyword:'prospek, meeting', point: 3},
+                    {keyword:'surat, mou', point: 0.7},
+                    {keyword:'follow up, lead, crm', point: 0.35}
+                ] 
+            },
             'Advertiser': { target: 12, members: ['Gerry', 'Ikmal'], defaultPoint: 1.5, rules: [] },
             'KOL Specialist': { 
                 target: 18, 
@@ -109,7 +130,7 @@
                     {keyword:'report bulanan', point: 8},
                     {keyword:'brief campaign', point: 8},
                     {keyword:'riset, meet, briefing', point: 2.5},
-                    {keyword:'approuch', point: 0.3}, // Typo mengikuti gambar
+                    {keyword:'approuch', point: 0.3},
                     {keyword:'rekomendasi', point: 0.5},
                     {keyword:'finishing campaign', point: 1.3},
                     {keyword:'finishing report', point: 1.3}
