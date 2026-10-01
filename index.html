@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Form & Update To Do List Tim</title>
+    
     <style>
         * { box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; }
         body { background-color: #f3f4f6; padding: 20px; display: flex; justify-content: center; }
@@ -38,6 +39,12 @@
         .status-OnProgress { background: #fef08a; color: #854d0e; border-color: #fde047; }
         .status-Selesai { background: #dcfce7; color: #166534; border-color: #86efac; }
         .status-Cancel { background: #e5e7eb; color: #374151; border-color: #d1d5db; }
+
+        /* Custom Modal Styling untuk menggantikan alert dan confirm bawaan browser */
+        #custom-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; z-index: 1000; padding: 20px; }
+        .modal-content { background: #ffffff; padding: 25px; border-radius: 12px; max-width: 400px; width: 100%; text-align: center; box-shadow: 0 10px 15px rgba(0,0,0,0.1); }
+        .modal-content p { font-size: 15px; color: #374151; margin-bottom: 20px; font-weight: 500; }
+        .modal-buttons button { width: auto; min-width: 80px; margin: 0 5px; padding: 8px 16px; }
     </style>
 </head>
 <body>
@@ -74,6 +81,14 @@
         </div>
     </div>
 
+    <!-- Elemen Custom Modal -->
+    <div id="custom-modal">
+        <div class="modal-content">
+            <p id="modal-text"></p>
+            <div class="modal-buttons" id="modal-buttons"></div>
+        </div>
+    </div>
+
     <script>
         const TEAM_CONFIG = JSON.parse(localStorage.getItem('kpi_team_config')) || {
             'Content Writer': { target: 16, members: ['Anne', 'Natasya', 'Widia'], defaultPoint: 1.0, rules: [] },
@@ -94,6 +109,37 @@
             const inputEl = document.getElementById('pic-name');
             if (inputEl) {
                 inputEl.value = toTitleCase(inputEl.value);
+            }
+        }
+
+        function showAlert(msg, callback = null) {
+            const modal = document.getElementById('custom-modal');
+            const text = document.getElementById('modal-text');
+            const buttons = document.getElementById('modal-buttons');
+            text.innerText = msg;
+            buttons.innerHTML = '<button onclick="closeModal(true)" style="background:#2563eb; color:white;">OK</button>';
+            modal.style.display = 'flex';
+            modal.callback = callback;
+        }
+
+        function showConfirm(msg, callback) {
+            const modal = document.getElementById('custom-modal');
+            const text = document.getElementById('modal-text');
+            const buttons = document.getElementById('modal-buttons');
+            text.innerText = msg;
+            buttons.innerHTML = `
+                <button onclick="closeModal(true)" style="background:#dc2626; color:white;">Ya</button>
+                <button onclick="closeModal(false)" style="background:#6b7280; color:white;">Batal</button>
+            `;
+            modal.style.display = 'flex';
+            modal.callback = callback;
+        }
+
+        function closeModal(result) {
+            const modal = document.getElementById('custom-modal');
+            modal.style.display = 'none';
+            if (result && typeof modal.callback === 'function') {
+                modal.callback();
             }
         }
 
@@ -334,18 +380,22 @@
         }
 
         function removeTaskItem(btn, id) {
-            if(confirm('Hapus tugas ini?')) {
+            // Menggunakan custom confirm
+            showConfirm('Hapus tugas ini?', () => {
                 let db = JSON.parse(localStorage.getItem('daily_report_db')) || [];
                 db = db.filter(d => d.id !== id);
                 localStorage.setItem('daily_report_db', JSON.stringify(db));
                 btn.parentElement.remove();
                 updateKPICheck();
-            }
+            });
         }
 
         function saveAndUpdateAll() {
             const rawName = document.getElementById('pic-name').value.trim();
-            if (!rawName) return alert('Masukkan Nama PIC terlebih dahulu!');
+            if (!rawName) {
+                showAlert('Masukkan Nama PIC terlebih dahulu!');
+                return;
+            }
 
             const name = toTitleCase(rawName);
             document.getElementById('pic-name').value = name;
@@ -359,7 +409,10 @@
             let currentTime = new Date().toLocaleTimeString('id-ID', {hour: '2-digit', minute:'2-digit'});
             
             const taskRows = document.querySelectorAll('#existing-task-container .task-row');
-            if (taskRows.length === 0) return alert('Minimal harus ada 1 tugas!');
+            if (taskRows.length === 0) {
+                showAlert('Minimal harus ada 1 tugas!');
+                return;
+            }
 
             let processedIds = [];
             let waTasksList = [];
@@ -468,12 +521,12 @@
                 waText += `\nCatatan Tambahan :\n${additionalNote}\n`;
             }
 
-            alert('Data berhasil diperbarui & disinkronkan ke Dashboard Admin!');
-            
-            // Penggunaan API langsung WhatsApp untuk mencegah karakter ikon terdistorsi
-            const encodedText = encodeURIComponent(waText);
-            const waLink = `https://api.whatsapp.com/send?phone=${targetNumber}&text=${encodedText}`;
-            window.location.href = waLink;
+            // Memanggil custom alert dan melanjutkan ke WhatsApp setelah klik OK
+            showAlert('Data berhasil diperbarui & disinkronkan ke Dashboard Admin!', () => {
+                const encodedText = encodeURIComponent(waText);
+                const waLink = `https://api.whatsapp.com/send?phone=${targetNumber}&text=${encodedText}`;
+                window.location.href = waLink;
+            });
         }
     </script>
 </body>
