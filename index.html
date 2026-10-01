@@ -565,15 +565,24 @@
                 body: JSON.stringify(exportData)
             })
             .then(response => response.json())
-            .then(data => console.log('Sukses simpan:', data))
-            .catch(error => console.error('Error simpan:', error))
-            .finally(() => {
+            .then(data => {
                 submitBtn.innerHTML = originalBtnText;
                 submitBtn.disabled = false;
                 
-                showAlert('✅ Data berhasil diperbarui & disinkronkan ke Spreadsheet!', () => {
-                    window.location.href = `https://api.whatsapp.com/send?phone=${targetNumber}&text=${encodeURIComponent(waText)}`;
-                });
+                if (data.status === 'sukses') {
+                    showAlert('✅ Data berhasil diperbarui & disinkronkan ke Spreadsheet!', () => {
+                        window.location.href = `https://api.whatsapp.com/send?phone=${targetNumber}&text=${encodeURIComponent(waText)}`;
+                    });
+                } else {
+                    // JIKA ADA ERROR DARI GOOGLE, MUNCULKAN PESANNYA
+                    showAlert('❌ GAGAL MENYIMPAN KE SPREADSHEET: ' + data.message);
+                }
+            })
+            .catch(error => {
+                submitBtn.innerHTML = originalBtnText;
+                submitBtn.disabled = false;
+                showAlert('❌ Gagal menghubungi server Google. Pastikan URL Web App sudah benar!');
+                console.error('Error simpan:', error);
             });
         }
     </script>
