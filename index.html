@@ -410,11 +410,11 @@
             let db = JSON.parse(localStorage.getItem('daily_report_db')) || [];
             let today = getTodayISO();
             
-            // Ubah pemisah titik menjadi titik dua (:) agar dibaca sebagai Format Waktu di Spreadsheet
+            // Gunakan format waktu standar (Titik Dua) agar Google Sheets mendeteksinya sebagai Jam secara otomatis
             let now = new Date();
             let hours = String(now.getHours()).padStart(2, '0');
             let minutes = String(now.getMinutes()).padStart(2, '0');
-            let currentTime = "'" + hours + "." + minutes; // Tanda petik memaksa Sheets membacanya sebagai TEKS murni
+            let currentTime = hours + ":" + minutes; 
             
             const taskRows = document.querySelectorAll('#existing-task-container .task-row');
             if (taskRows.length === 0) {
