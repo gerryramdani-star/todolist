@@ -40,7 +40,7 @@
         .status-Selesai { background: #dcfce7; color: #166534; border-color: #86efac; }
         .status-Cancel { background: #e5e7eb; color: #374151; border-color: #d1d5db; }
 
-        /* Custom Modal Styling untuk menggantikan alert dan confirm bawaan browser */
+        /* Custom Modal Styling */
         #custom-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; z-index: 1000; padding: 20px; }
         .modal-content { background: #ffffff; padding: 25px; border-radius: 12px; max-width: 400px; width: 100%; text-align: center; box-shadow: 0 10px 15px rgba(0,0,0,0.1); }
         .modal-content p { font-size: 15px; color: #374151; margin-bottom: 20px; font-weight: 500; }
@@ -90,7 +90,7 @@
     </div>
 
     <script>
-        // 🔴 PENTING: PASTE URL WEB APP DARI GOOGLE APPS SCRIPT DI BAWAH INI
+        // PASTIKAN URL INI ADALAH URL DEPLOY TERBARU ANDA
         const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxIKWvoJE5_OsfA64mCAJ3tPLTLez2-hFt8Dgt-8i3OwsIqFzcqbUhIsGZs2nqXEdqusg/exec';
 
         const TEAM_CONFIG = JSON.parse(localStorage.getItem('kpi_team_config')) || {
@@ -383,7 +383,6 @@
         }
 
         function removeTaskItem(btn, id) {
-            // Menggunakan custom confirm
             showConfirm('Hapus tugas ini?', () => {
                 let db = JSON.parse(localStorage.getItem('daily_report_db')) || [];
                 db = db.filter(d => d.id !== id);
@@ -410,7 +409,7 @@
             let db = JSON.parse(localStorage.getItem('daily_report_db')) || [];
             let today = getTodayISO();
             
-            // Gunakan format waktu standar (Titik Dua) agar Google Sheets mendeteksinya sebagai Jam secara otomatis
+            // Format waktu menggunakan titik dua (:) agar dibaca rapi di Spreadsheet
             let now = new Date();
             let hours = String(now.getHours()).padStart(2, '0');
             let minutes = String(now.getMinutes()).padStart(2, '0');
@@ -424,7 +423,7 @@
 
             let processedIds = [];
             let waTasksList = [];
-            let exportData = []; // NEW: Array khusus untuk menampung data yang akan dikirim ke Spreadsheet
+            let exportData = []; // Data yang akan dikirim ke Spreadsheet
 
             taskRows.forEach((row, index) => {
                 let rowId = row.getAttribute('data-id');
@@ -447,7 +446,6 @@
                 let parsed = parseTaskQtyAndPoin(name, taskText);
                 let finalPoin = taskStatus === 'Selesai' ? parsed.totalPoin : 0;
 
-                // Menyiapkan dan memasukkan setiap baris data ke dalam array exportData
                 exportData.push({
                     no: index + 1,
                     nama: name,
@@ -508,7 +506,7 @@
 
             localStorage.setItem('daily_report_db', JSON.stringify(db));
 
-            // FORMAT PESAN WA (Hanya Nama dan Tanggal yang tebal)
+            // FORMAT PESAN WA BARU
             let waText = `To Do List *${name}* *(${getTodayFormatted()})*:\n\n`;
             let ketList = [];
 
@@ -546,43 +544,35 @@
                 waText += `\nCatatan Tambahan :\n${additionalNote}\n`;
             }
 
-            // --- PROSES PENGIRIMAN DATA KE GOOGLE SHEETS ---
+            // PENGIRIMAN KE SPREADSHEET
             const submitBtn = document.querySelector('.btn-submit');
             const originalBtnText = submitBtn.innerHTML;
             submitBtn.innerHTML = '⏳ Sedang Menyimpan ke Spreadsheet...';
             submitBtn.disabled = true;
 
-            // Pengecekan apakah URL sudah diisi
             if (GOOGLE_SCRIPT_URL === 'MASUKKAN_URL_WEB_APP_ANDA_DISINI') {
                 submitBtn.innerHTML = originalBtnText;
                 submitBtn.disabled = false;
-                showAlert('⚠️️ URL Google Script belum dimasukkan di kode HTML! Data hanya dikirim ke WA.', () => {
-                    const encodedText = encodeURIComponent(waText);
-                    const waLink = `https://api.whatsapp.com/send?phone=${targetNumber}&text=${encodedText}`;
-                    window.location.href = waLink;
+                showAlert('⚠ URL Google Script belum dimasukkan! Data hanya dikirim ke WA.', () => {
+                    window.location.href = `https://api.whatsapp.com/send?phone=${targetNumber}&text=${encodeURIComponent(waText)}`;
                 });
                 return;
             }
 
-            // Mengirim data JSON ke Google Apps Script
             fetch(GOOGLE_SCRIPT_URL, {
                 method: 'POST',
-                headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // Menggunakan text/plain agar tidak terblokir CORS
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                 body: JSON.stringify(exportData)
             })
             .then(response => response.json())
-            .then(data => console.log('Sukses simpan ke Spreadsheet:', data))
-            .catch(error => console.error('Error saat simpan ke Spreadsheet:', error))
+            .then(data => console.log('Sukses simpan:', data))
+            .catch(error => console.error('Error simpan:', error))
             .finally(() => {
-                // Kembalikan status tombol seperti semula
                 submitBtn.innerHTML = originalBtnText;
                 submitBtn.disabled = false;
                 
-                // Memunculkan notifikasi sukses dan beralih ke WhatsApp
                 showAlert('✅ Data berhasil diperbarui & disinkronkan ke Spreadsheet!', () => {
-                    const encodedText = encodeURIComponent(waText);
-                    const waLink = `https://api.whatsapp.com/send?phone=${targetNumber}&text=${encodedText}`;
-                    window.location.href = waLink;
+                    window.location.href = `https://api.whatsapp.com/send?phone=${targetNumber}&text=${encodeURIComponent(waText)}`;
                 });
             });
         }
