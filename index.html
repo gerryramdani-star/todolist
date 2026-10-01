@@ -512,11 +512,11 @@
 
             waTasksList.forEach((t, i) => {
                 let statusIcon = "";
-                // Hanya beri ikon centang jika statusnya Selesai
                 if (t.status === 'Selesai') {
                     statusIcon = " ✅";
-                } 
-                // Status lain tidak diberi ikon apapun
+                } else if (t.status === 'Belum') {
+                    statusIcon = " ❌";
+                }
 
                 let clientPrefix = t.client ? `[${t.client}] ` : '';
                 
