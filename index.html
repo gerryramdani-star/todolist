@@ -504,7 +504,7 @@
             localStorage.setItem('daily_report_db', JSON.stringify(db));
 
             // FORMAT PESAN WA (Hanya Nama dan Tanggal yang tebal)
-            let waText = `To Do List *${name}* (*${getTodayFormatted()}*)\n\n`;
+            let waText = `To Do List *${name}* *(${getTodayFormatted()})*:\n\n`;
             let ketList = [];
 
             waTasksList.forEach((t, i) => {
