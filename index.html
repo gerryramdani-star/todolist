@@ -90,6 +90,9 @@
     </div>
 
     <script>
+        // 🔴 PENTING: PASTE URL WEB APP DARI GOOGLE APPS SCRIPT DI BAWAH INI
+        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxIKWvoJE5_OsfA64mCAJ3tPLTLez2-hFt8Dgt-8i3OwsIqFzcqbUhIsGZs2nqXEdqusg/exec';
+
         const TEAM_CONFIG = JSON.parse(localStorage.getItem('kpi_team_config')) || {
             'Content Writer': { target: 16, members: ['Anne', 'Natasya', 'Widia'], defaultPoint: 1.0, rules: [] },
             'Graphic Designer': { target: 14, members: ['Muqita', 'Qalbi', 'Raditya', 'Ramsat'], defaultPoint: 1.0, rules: [{keyword:'carousel', point:3.5}] },
@@ -416,8 +419,9 @@
 
             let processedIds = [];
             let waTasksList = [];
+            let exportData = []; // NEW: Array khusus untuk menampung data yang akan dikirim ke Spreadsheet
 
-            taskRows.forEach((row) => {
+            taskRows.forEach((row, index) => {
                 let rowId = row.getAttribute('data-id');
                 let clientEl = row.querySelector('.task-client-input');
                 let textEl = row.querySelector('.task-edit-input');
@@ -437,6 +441,22 @@
 
                 let parsed = parseTaskQtyAndPoin(name, taskText);
                 let finalPoin = taskStatus === 'Selesai' ? parsed.totalPoin : 0;
+
+                // Menyiapkan dan memasukkan setiap baris data ke dalam array exportData
+                exportData.push({
+                    no: index + 1,
+                    nama: name,
+                    role: getRoleByName(name) || 'Content Writer',
+                    tanggal: today,
+                    waktuKirim: currentTime,
+                    klien: clientText,
+                    task: taskText,
+                    qty: parsed.qty,
+                    poin: finalPoin,
+                    deadline: taskDeadline,
+                    keterangan: taskKet,
+                    status: taskStatus
+                });
 
                 if (rowId.startsWith('new_')) {
                     let newObj = {
@@ -521,11 +541,44 @@
                 waText += `\nCatatan Tambahan :\n${additionalNote}\n`;
             }
 
-            // Memanggil custom alert dan melanjutkan ke WhatsApp setelah klik OK
-            showAlert('Data berhasil diperbarui & disinkronkan ke Dashboard Admin!', () => {
-                const encodedText = encodeURIComponent(waText);
-                const waLink = `https://api.whatsapp.com/send?phone=${targetNumber}&text=${encodedText}`;
-                window.location.href = waLink;
+            // --- PROSES PENGIRIMAN DATA KE GOOGLE SHEETS ---
+            const submitBtn = document.querySelector('.btn-submit');
+            const originalBtnText = submitBtn.innerHTML;
+            submitBtn.innerHTML = '⏳ Sedang Menyimpan ke Spreadsheet...';
+            submitBtn.disabled = true;
+
+            // Pengecekan apakah URL sudah diisi
+            if (GOOGLE_SCRIPT_URL === 'MASUKKAN_URL_WEB_APP_ANDA_DISINI') {
+                submitBtn.innerHTML = originalBtnText;
+                submitBtn.disabled = false;
+                showAlert('⚠️️ URL Google Script belum dimasukkan di kode HTML! Data hanya dikirim ke WA.', () => {
+                    const encodedText = encodeURIComponent(waText);
+                    const waLink = `https://api.whatsapp.com/send?phone=${targetNumber}&text=${encodedText}`;
+                    window.location.href = waLink;
+                });
+                return;
+            }
+
+            // Mengirim data JSON ke Google Apps Script
+            fetch(GOOGLE_SCRIPT_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // Menggunakan text/plain agar tidak terblokir CORS
+                body: JSON.stringify(exportData)
+            })
+            .then(response => response.json())
+            .then(data => console.log('Sukses simpan ke Spreadsheet:', data))
+            .catch(error => console.error('Error saat simpan ke Spreadsheet:', error))
+            .finally(() => {
+                // Kembalikan status tombol seperti semula
+                submitBtn.innerHTML = originalBtnText;
+                submitBtn.disabled = false;
+                
+                // Memunculkan notifikasi sukses dan beralih ke WhatsApp
+                showAlert('✅ Data berhasil diperbarui & disinkronkan ke Spreadsheet!', () => {
+                    const encodedText = encodeURIComponent(waText);
+                    const waLink = `https://api.whatsapp.com/send?phone=${targetNumber}&text=${encodedText}`;
+                    window.location.href = waLink;
+                });
             });
         }
     </script>
