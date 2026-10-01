@@ -13,8 +13,9 @@
         label { font-weight: 600; font-size: 14px; margin-bottom: 6px; display: block; color: #374151; }
         input, select, textarea { width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; margin-bottom: 15px; font-size: 14px;}
         
+        /* Baris Tugas Flex Layout */
         .task-row { display: flex; gap: 6px; margin-bottom: 10px; align-items: center; background: #f9fafb; padding: 8px; border-radius: 6px; border: 1px solid #e5e7eb; flex-wrap: wrap; }
-        .task-client-input { flex: 1; min-width: 110px; margin-bottom: 0; padding: 6px; font-size: 12px; border: 1px solid #d1d5db; border-radius: 6px; background: #ffffff; }
+        .task-client-input { flex: 1; min-width: 120px; margin-bottom: 0; padding: 6px; font-size: 12px; border: 1px solid #d1d5db; border-radius: 6px; background: #ffffff; }
         .task-edit-input { flex: 2; min-width: 160px; margin-bottom: 0; font-size: 13.5px; background: #ffffff; }
         .task-deadline-input { width: 120px; margin-bottom: 0; padding: 6px; font-size: 12px; border: 1px solid #d1d5db; border-radius: 6px; background: #ffffff; }
         .status-picker { width: 110px; padding: 6px; font-size: 12px; font-weight: 600; border-radius: 20px; margin-bottom: 0;}
@@ -28,9 +29,11 @@
         .section-box { display: none; margin-bottom: 20px; background: #eff6ff; border: 1px solid #bfdbfe; padding: 15px; border-radius: 8px; }
         .help-text { font-size: 11px; color: #6b7280; display: block; margin-top: -10px; margin-bottom: 15px; }
 
+        /* Notifikasi Box KPI */
         #kpi-notification { display: none; margin-bottom: 15px; padding: 12px; border-radius: 8px; font-size: 13px; font-weight: 600; }
 
-        .status-Empty { background: #ffffff; color: #6b7280; border-color: #d1d5db; }
+        /* Status Styling di Form */
+        .status-Empty, select.status-picker:invalid { background: #ffffff; color: #6b7280; border-color: #d1d5db; }
         .status-Belum { background: #fee2e2; color: #991b1b; border-color: #fca5a5; }
         .status-OnProgress { background: #fef08a; color: #854d0e; border-color: #fde047; }
         .status-Selesai { background: #dcfce7; color: #166534; border-color: #86efac; }
@@ -49,14 +52,17 @@
         <input type="text" id="pic-name" placeholder="Contoh: Adi Julian (ketik lengkap)" oninput="checkExistingTasks()" onblur="formatPICInputName()" required>
         <span class="help-text">Daftar tugas hari ini akan muncul otomatis setelah Anda mengetik nama lengkap PIC dengan benar.</span>
 
+        <!-- BAGIAN UTAMA -->
         <div id="existing-section" class="section-box">
+            <!-- Box Reminder KPI -->
             <div id="kpi-notification"></div>
 
-            <label style="color:#1e40af; margin-bottom:10px;">⚡ Daftar Tugas Hari Ini:</label>
+            <label style="color:#1e40af; margin-bottom:10px;">⚡ Daftar Tugas Hari Ini (Bisa edit nama klien, redaksi, status, deadline, & keterangan):</label>
             <div id="existing-task-container"></div>
             
             <button type="button" class="btn-add" style="background:#ffffff;" onclick="addInlineTaskRow()">+ Tambah Tugas Baru Jam Ini</button>
 
+            <!-- TOMBOL FITUR CATATAN TAMBAHAN (NOTE) -->
             <button type="button" id="btn-toggle-note" class="btn-note-toggle" onclick="toggleNoteField()">📝 + Tambah Catatan / Note Tambahan</button>
             <div id="note-container" style="display: none; margin-bottom: 15px;">
                 <label style="color:#374151; margin-bottom:6px;">📌 Catatan Tambahan / Note:</label>
@@ -64,16 +70,13 @@
             </div>
             
             <input type="hidden" id="wa-number" value="6285721092783">
-            <button type="button" id="btn-submit-main" class="btn-submit" style="background:#16a34a;" onclick="saveAndUpdateAll()">💾 Simpan Perubahan & Kirim Rekap ke WA</button>
+            <button type="button" class="btn-submit" style="background:#16a34a;" onclick="saveAndUpdateAll()">💾 Simpan Perubahan & Kirim Rekap ke WA</button>
         </div>
     </div>
 
     <script>
-        // ⚠️ GANTI DENGAN URL WEB APP GOOGLE APPS SCRIPT ANDA:
-        const SCRIPT_URL = "MASUKKAN_URL_WEB_APP_GOOGLE_SCRIPT_ANDA_DI_SINI";
-
         const TEAM_CONFIG = JSON.parse(localStorage.getItem('kpi_team_config')) || {
-            'Content Writer': { target: 16, members: ['Anne', 'Ayunda', 'Natasya', 'Widia'], defaultPoint: 1.0, rules: [] },
+            'Content Writer': { target: 16, members: ['Anne', 'Natasya', 'Widia'], defaultPoint: 1.0, rules: [] },
             'Graphic Designer': { target: 14, members: ['Muqita', 'Qalbi', 'Raditya', 'Ramsat'], defaultPoint: 1.0, rules: [{keyword:'carousel', point:3.5}] },
             'Video Editor': { target: 9, members: ['Adi Julian', 'Ghaly', 'Raihani'], defaultPoint: 1.0, rules: [{keyword:'edukasi', point:2.25}] },
             'Videografer': { target: 12, members: ['Dzakwan'], defaultPoint: 1.0, rules: [{keyword:'visit', point:6}, {keyword:'full', point:12}] },
@@ -89,30 +92,35 @@
 
         function formatPICInputName() {
             const inputEl = document.getElementById('pic-name');
-            if (inputEl) inputEl.value = toTitleCase(inputEl.value);
+            if (inputEl) {
+                inputEl.value = toTitleCase(inputEl.value);
+            }
         }
 
-        function getTodayFormattedDDMMYYYY() {
+        function getTodayISO() {
             const d = new Date();
-            const day = String(d.getDate()).padStart(2, '0');
-            const month = String(d.getMonth() + 1).padStart(2, '0');
             const year = d.getFullYear();
-            return `${day}-${month}-${year}`;
-        }
-
-        function getCurrentTimeWIB() {
-            const d = new Date();
-            const hours = String(d.getHours()).padStart(2, '0');
-            const minutes = String(d.getMinutes()).padStart(2, '0');
-            return `${hours}.${minutes} WIB`;
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
         }
 
         function formatDateToID(dateStr) {
             if (!dateStr) return '';
-            if (dateStr.includes('-') && dateStr.split('-')[0].length === 2) return dateStr;
+            if (dateStr.includes('/')) return dateStr;
             const parts = dateStr.split('-');
-            if (parts.length === 3) return `${parts[2]}-${parts[1]}-${parts[0]}`;
+            if (parts.length === 3) {
+                return `${parts[2]}/${parts[1]}/${parts[0]}`;
+            }
             return dateStr;
+        }
+
+        function getTodayFormatted() {
+            const d = new Date();
+            const day = d.getDate().toString().padStart(2, '0');
+            const month = (d.getMonth() + 1).toString().padStart(2, '0');
+            const year = d.getFullYear().toString().slice(-2);
+            return `${day}/${month}/${year}`;
         }
 
         window.onload = function() {
@@ -132,6 +140,7 @@
 
         function parseTaskQtyAndPoin(name, taskText) {
             if (!taskText) return { qty: 0, totalPoin: 0 };
+            
             const role = getRoleByName(name) || 'Content Writer';
             const config = TEAM_CONFIG[role];
             let basePt = config ? config.defaultPoint : 1.0;
@@ -140,7 +149,10 @@
                 let lowerTask = taskText.toLowerCase();
                 for (let r of config.rules) {
                     let kws = r.keyword.split(',').map(k=>k.trim().toLowerCase()).filter(k=>k);
-                    if (kws.some(kw => lowerTask.includes(kw))) { basePt = r.point; break; }
+                    if (kws.some(kw => lowerTask.includes(kw))) { 
+                        basePt = r.point; 
+                        break; 
+                    }
                 }
             }
 
@@ -151,12 +163,19 @@
             if (rangeMatch) {
                 const start = parseInt(rangeMatch[1], 10);
                 const end = parseInt(rangeMatch[2], 10);
-                if (end >= start && end <= 31 && start >= 1) qty = (end - start + 1);
+                if (end >= start && end <= 31 && start >= 1) {
+                    qty = (end - start + 1);
+                }
             } else if (listMatch) {
                 const numbers = listMatch[0].match(/\d{1,2}/g);
                 if (numbers) {
-                    const validDays = numbers.filter(n => parseInt(n, 10) >= 1 && parseInt(n, 10) <= 31);
-                    if (validDays.length > 0) qty = validDays.length;
+                    const validDays = numbers.filter(n => {
+                        let num = parseInt(n, 10);
+                        return num >= 1 && num <= 31;
+                    });
+                    if (validDays.length > 0) {
+                        qty = validDays.length;
+                    }
                 }
             }
 
@@ -166,8 +185,10 @@
         function handleStatusChange(selectEl) {
             const val = selectEl.value;
             selectEl.className = 'status-picker status-' + (val ? val.replace(/\s+/g, '') : 'Empty');
+            
             const row = selectEl.closest('.task-row');
             const ketInput = row.querySelector('.task-ket-input');
+            
             if (ketInput) {
                 if (val === 'Belum' || val === 'Cancel') {
                     ketInput.style.display = 'block';
@@ -208,12 +229,12 @@
                     notificationEl.style.background = '#fef2f2';
                     notificationEl.style.color = '#991b1b';
                     notificationEl.style.border = '1px solid #fca5a5';
-                    notificationEl.innerHTML = `⚠️ <b>Perhatian (${role}):</b> Estimasi (${grandTotalPoin} Poin) belum mencapai Target KPI (${targetKPI} Poin).`;
+                    notificationEl.innerHTML = `⚠️ <b>Perhatian (${role}):</b> Total estimasi saat ini (<b>${grandTotalPoin} Poin</b>) belum memenuhi Target KPI Harian (<b>${targetKPI} Poin</b>).`;
                 } else {
                     notificationEl.style.background = '#f0fdf4';
                     notificationEl.style.color = '#166534';
                     notificationEl.style.border = '1px solid #86efac';
-                    notificationEl.innerHTML = `✅ <b>Mantap (${role}):</b> Total estimasi (${grandTotalPoin} Poin) telah memenuhi Target KPI (${targetKPI} Poin)!`;
+                    notificationEl.innerHTML = `✅ <b>Mantap (${role}):</b> Total estimasi saat ini (<b>${grandTotalPoin} Poin</b>) telah memenuhi Target KPI Harian (<b>${targetKPI} Poin</b>)!`;
                 }
             }
         }
@@ -230,174 +251,229 @@
             }
         }
 
-        let fetchTimeout = null;
-
-        async function checkExistingTasks() {
+        function checkExistingTasks() {
             const rawName = document.getElementById('pic-name').value.trim();
             const nameInput = toTitleCase(rawName);
             const existingSection = document.getElementById('existing-section');
             const container = document.getElementById('existing-task-container');
+            container.innerHTML = '';
 
             const role = getRoleByName(nameInput);
+
             if (!role) {
                 existingSection.style.display = 'none';
+                const notificationEl = document.getElementById('kpi-notification');
+                if (notificationEl) notificationEl.style.display = 'none';
                 return;
             }
 
+            let db = JSON.parse(localStorage.getItem('daily_report_db')) || [];
+            let today = getTodayISO();
+
+            let userTasks = db.filter(d => d.tanggal === today && d.nama.toLowerCase() === nameInput.toLowerCase());
+
             existingSection.style.display = 'block';
 
-            clearTimeout(fetchTimeout);
-            fetchTimeout = setTimeout(async () => {
-                let today = getTodayFormattedDDMMYYYY();
-                let userTasks = [];
-
-                if (SCRIPT_URL && !SCRIPT_URL.includes("MASUKKAN_URL_WEB_APP")) {
-                    try {
-                        let resp = await fetch(SCRIPT_URL);
-                        let allData = await resp.json();
-                        userTasks = allData.filter(d => d.tanggal === today && d.nama.toLowerCase() === nameInput.toLowerCase());
-                    } catch(e) {
-                        console.warn("Using offline mode");
-                    }
-                }
-
-                container.innerHTML = '';
-                if (userTasks.length === 0) {
-                    addInlineTaskRow();
-                } else {
-                    userTasks.forEach((t) => {
-                        let row = document.createElement('div');
-                        row.className = 'task-row';
-                        row.innerHTML = `
-                            <input type="text" class="task-client-input" value="${t.klien || ''}" placeholder="Klien...">
-                            <input type="text" class="task-edit-input" value="${t.task || ''}" placeholder="To Do List..." oninput="updateKPICheck()">
-                            <input type="date" class="task-deadline-input" value="${t.deadline ? t.deadline.split('-').reverse().join('-') : ''}">
-                            <select class="status-picker status-${(t.status || '').replace(/\s+/g, '') || 'Empty'}" onchange="handleStatusChange(this)">
-                                <option value="" ${!t.status ? 'selected disabled':''}>-- Status --</option>
-                                <option value="Belum" ${t.status === 'Belum' ? 'selected':''}>Belum</option>
-                                <option value="On Progress" ${t.status === 'On Progress' ? 'selected':''}>On Progress</option>
-                                <option value="Selesai" ${t.status === 'Selesai' ? 'selected':''}>Selesai</option>
-                                <option value="Cancel" ${t.status === 'Cancel' ? 'selected':''}>Cancel</option>
-                            </select>
-                            <input type="text" class="task-ket-input" value="${t.keterangan || ''}" placeholder="Keterangan..." style="${(t.status === 'Belum' || t.status === 'Cancel') ? 'display:block;' : 'display:none;'}">
-                            <button type="button" style="width:32px; background:#dc2626; color:white; border:none; border-radius:4px; padding:6px;" onclick="this.parentElement.remove(); updateKPICheck();">X</button>
-                        `;
-                        container.appendChild(row);
-                    });
-                }
-                updateKPICheck();
-            }, 300);
+            if (userTasks.length === 0) {
+                addInlineTaskRow();
+            } else {
+                userTasks.forEach((t) => {
+                    let deadlineVal = t.deadline || '';
+                    let ketVal = t.keterangan || '';
+                    let clientVal = t.klien || '';
+                    let statusVal = t.status || '';
+                    
+                    let showKetStyle = (statusVal === 'Belum' || statusVal === 'Cancel') ? 'display: block;' : 'display: none;';
+                    let ketPlaceholder = (statusVal === 'Cancel') ? 'Ket. alasan cancel...' : 'Ket. jika belum selesai...';
+                    
+                    let row = document.createElement('div');
+                    row.className = 'task-row';
+                    row.setAttribute('data-id', t.id);
+                    row.innerHTML = `
+                        <input type="text" class="task-client-input" id="client-${t.id}" value="${clientVal}" placeholder="Nama Klien...">
+                        <input type="text" class="task-edit-input" id="text-${t.id}" value="${t.task}" placeholder="Tugas..." oninput="updateKPICheck()">
+                        <input type="date" class="task-deadline-input" id="deadline-${t.id}" value="${deadlineVal}">
+                        <select class="status-picker status-${statusVal.replace(/\s+/g, '') || 'Empty'}" id="status-${t.id}" onchange="handleStatusChange(this)">
+                            <option value="" ${statusVal === '' ? 'selected disabled':''}>-- Status --</option>
+                            <option value="Belum" ${statusVal === 'Belum' ? 'selected':''}>Belum</option>
+                            <option value="On Progress" ${statusVal === 'On Progress' ? 'selected':''}>On Progress</option>
+                            <option value="Selesai" ${statusVal === 'Selesai' ? 'selected':''}>Selesai</option>
+                            <option value="Cancel" ${statusVal === 'Cancel' ? 'selected':''}>Cancel</option>
+                        </select>
+                        <input type="text" class="task-ket-input" id="ket-${t.id}" value="${ketVal}" placeholder="${ketPlaceholder}" style="${showKetStyle}">
+                        <button type="button" style="width:32px; background:#dc2626; color:white; border:none; border-radius:4px; cursor:pointer; padding:6px;" onclick="removeTaskItem(this, '${t.id}')">X</button>
+                    `;
+                    container.appendChild(row);
+                });
+            }
+            updateKPICheck();
         }
 
         function addInlineTaskRow() {
             const container = document.getElementById('existing-task-container');
+            let newId = 'new_' + Math.random().toString(36).substr(2, 9);
             let row = document.createElement('div');
             row.className = 'task-row';
+            row.setAttribute('data-id', newId);
             row.innerHTML = `
-                <input type="text" class="task-client-input" placeholder="Klien...">
-                <input type="text" class="task-edit-input" placeholder="To Do List baru hari ini..." oninput="updateKPICheck()">
-                <input type="date" class="task-deadline-input">
-                <select class="status-picker status-Empty" onchange="handleStatusChange(this)">
+                <input type="text" class="task-client-input" id="client-${newId}" placeholder="Nama Klien...">
+                <input type="text" class="task-edit-input new-task-field" id="text-${newId}" placeholder="Tugas baru hari ini..." oninput="updateKPICheck()">
+                <input type="date" class="task-deadline-input" id="deadline-${newId}">
+                <select class="status-picker status-Empty" id="status-${newId}" onchange="handleStatusChange(this)">
                     <option value="" selected disabled>-- Status --</option>
                     <option value="Belum">Belum</option>
                     <option value="On Progress">On Progress</option>
                     <option value="Selesai">Selesai</option>
                     <option value="Cancel">Cancel</option>
                 </select>
-                <input type="text" class="task-ket-input" placeholder="Keterangan..." style="display: none;">
-                <button type="button" style="width:32px; background:#dc2626; color:white; border:none; border-radius:4px; padding:6px;" onclick="this.parentElement.remove(); updateKPICheck();">X</button>
+                <input type="text" class="task-ket-input" id="ket-${newId}" placeholder="Ket. jika belum selesai..." style="display: none;">
+                <button type="button" style="width:32px; background:#dc2626; color:white; border:none; border-radius:4px; cursor:pointer; padding:6px;" onclick="this.parentElement.remove(); updateKPICheck();">X</button>
             `;
             container.appendChild(row);
             updateKPICheck();
         }
 
-        async function saveAndUpdateAll() {
+        function removeTaskItem(btn, id) {
+            if(confirm('Hapus tugas ini?')) {
+                let db = JSON.parse(localStorage.getItem('daily_report_db')) || [];
+                db = db.filter(d => d.id !== id);
+                localStorage.setItem('daily_report_db', JSON.stringify(db));
+                btn.parentElement.remove();
+                updateKPICheck();
+            }
+        }
+
+        function saveAndUpdateAll() {
             const rawName = document.getElementById('pic-name').value.trim();
             if (!rawName) return alert('Masukkan Nama PIC terlebih dahulu!');
 
             const name = toTitleCase(rawName);
-            const role = getRoleByName(name) || 'Content Writer';
+            document.getElementById('pic-name').value = name;
+
             const targetNumber = document.getElementById('wa-number').value.trim();
-            const todayStr = getTodayFormattedDDMMYYYY();
-            const jamKirimStr = getCurrentTimeWIB();
+            const noteContainer = document.getElementById('note-container');
+            const additionalNote = noteContainer.style.display !== 'none' ? document.getElementById('additional-note').value.trim() : '';
+
+            let db = JSON.parse(localStorage.getItem('daily_report_db')) || [];
+            let today = getTodayISO();
+            let currentTime = new Date().toLocaleTimeString('id-ID', {hour: '2-digit', minute:'2-digit'});
             
             const taskRows = document.querySelectorAll('#existing-task-container .task-row');
             if (taskRows.length === 0) return alert('Minimal harus ada 1 tugas!');
 
-            let tasksToSave = [];
+            let processedIds = [];
             let waTasksList = [];
 
             taskRows.forEach((row) => {
+                let rowId = row.getAttribute('data-id');
                 let clientEl = row.querySelector('.task-client-input');
                 let textEl = row.querySelector('.task-edit-input');
                 let deadlineEl = row.querySelector('.task-deadline-input');
                 let statusEl = row.querySelector('.status-picker');
                 let ketEl = row.querySelector('.task-ket-input');
 
+                if(!textEl || !statusEl) return;
                 let clientText = clientEl ? clientEl.value.trim() : '';
-                let taskText = textEl ? textEl.value.trim() : '';
-                let taskDeadline = deadlineEl && deadlineEl.value ? formatDateToID(deadlineEl.value) : '';
-                let taskStatus = statusEl ? statusEl.value || 'Belum' : 'Belum';
+                let taskText = textEl.value.trim();
+                let taskDeadline = deadlineEl ? deadlineEl.value : '';
+                let taskStatus = statusEl.value || 'Belum';
+                
                 let taskKet = ((taskStatus === 'Belum' || taskStatus === 'Cancel') && ketEl) ? ketEl.value.trim() : '';
 
                 if(taskText === '') return;
 
                 let parsed = parseTaskQtyAndPoin(name, taskText);
                 let finalPoin = taskStatus === 'Selesai' ? parsed.totalPoin : 0;
-                let fullTaskText = clientText ? `[${clientText}] ${taskText}` : taskText;
 
-                tasksToSave.push({
-                    nama: name,
-                    divisi: role,
-                    tanggal: todayStr,
-                    jamKirim: jamKirimStr,
-                    task: fullTaskText,
-                    qty: parsed.qty,
-                    poin: finalPoin,
-                    deadline: taskDeadline,
-                    status: taskStatus,
-                    keterangan: taskKet
-                });
-
-                waTasksList.push({ client: clientText, task: taskText, status: taskStatus, deadline: taskDeadline, keterangan: taskKet });
+                if (rowId.startsWith('new_')) {
+                    let newObj = {
+                        id: Math.random().toString(36).substr(2, 9) + Date.now().toString(36),
+                        nama: name,
+                        klien: clientText,
+                        role: getRoleByName(name) || 'Content Writer',
+                        tanggal: today,
+                        waktuKirim: currentTime,
+                        no: db.length + 1,
+                        task: taskText,
+                        qty: parsed.qty,
+                        poin: finalPoin,
+                        deadline: taskDeadline,
+                        keterangan: taskKet,
+                        status: taskStatus
+                    };
+                    db.push(newObj);
+                    processedIds.push(newObj.id);
+                    waTasksList.push({ client: clientText, task: taskText, status: taskStatus, deadline: taskDeadline, keterangan: taskKet });
+                } else {
+                    let existingItem = db.find(d => d.id === rowId);
+                    if (existingItem) {
+                        existingItem.nama = name;
+                        existingItem.klien = clientText;
+                        existingItem.task = taskText;
+                        existingItem.status = taskStatus;
+                        existingItem.deadline = taskDeadline;
+                        existingItem.qty = parsed.qty;
+                        existingItem.poin = finalPoin;
+                        existingItem.keterangan = taskKet;
+                        processedIds.push(rowId);
+                        waTasksList.push({ client: clientText, task: taskText, status: taskStatus, deadline: taskDeadline, keterangan: taskKet });
+                    }
+                }
             });
 
-            const submitBtn = document.getElementById('btn-submit-main');
-            if (SCRIPT_URL && !SCRIPT_URL.includes("https://script.google.com/macros/s/AKfycbwARwDuSiqlfHrX2H0kEjkRYfUCOxq8xhPwPg3JRwFb11PcmQx-IrrAR1q1ivHhVnT3MA/exec")) {
-                submitBtn.disabled = true;
-                submitBtn.innerText = "⌛ Menyimpan ke Tab " + name + "...";
-                try {
-                    await fetch(SCRIPT_URL, {
-                        method: 'POST',
-                        mode: 'no-cors',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ action: 'save', tasks: tasksToSave, today: todayStr, nama: name })
-                    });
-                } catch (e) {
-                    console.error("Error saving to sheet", e);
+            db = db.filter(d => {
+                if (d.tanggal === today && d.nama.toLowerCase() === name.toLowerCase()) {
+                    return processedIds.includes(d.id);
                 }
-                submitBtn.disabled = false;
-                submitBtn.innerText = "💾 Simpan Perubahan & Kirim Rekap ke WA";
-            }
+                return true;
+            });
 
-            let waText = `To Do List *${name} (${todayStr.replace(/-/g, '/')})* :\n\n`;
+            localStorage.setItem('daily_report_db', JSON.stringify(db));
+
+            // FORMAT PESAN WA (Hanya Nama dan Tanggal yang tebal)
+            let waText = `To Do List *${name}* (*${getTodayFormatted()}*)\n\n`;
             let ketList = [];
 
             waTasksList.forEach((t, i) => {
-                let statusIcon = t.status === 'Selesai' ? " ✅" : (t.status === 'Belum' ? " ❌" : " ⏳");
+                let statusIcon = "";
+                if (t.status === 'Selesai') {
+                    statusIcon = " ✅";
+                } else if (t.status === 'Belum') {
+                    statusIcon = " ❌";
+                }
+
                 let clientPrefix = t.client ? `[${t.client}] ` : '';
-                let dlText = t.deadline ? ` [DL: ${t.deadline}]` : '';
+                
+                let dlText = "";
+                if (t.deadline) {
+                    let formattedDL = formatDateToID(t.deadline);
+                    if (formattedDL) {
+                        dlText = ` [DL: ${formattedDL}]`;
+                    }
+                }
                 
                 waText += `${i + 1}. ${clientPrefix}${t.task}${dlText}${statusIcon}\n`;
-                if (t.keterangan) ketList.push(`${i + 1}. ${t.keterangan}`);
+
+                if (t.keterangan && t.keterangan !== '') {
+                    ketList.push(`${i + 1}. ${t.keterangan}`);
+                }
             });
 
             if (ketList.length > 0) {
-                waText += `\nKeterangan Belum Selesai / Cancel :\n` + ketList.join('\n') + '\n';
+                waText += `\nKeterangan Belum Selesai / Cancel :\n\n`;
+                waText += ketList.join('\n') + '\n';
             }
 
-            alert(`Data berhasil disimpan di Tab "${name}" Google Sheets!`);
-            window.location.href = `https://api.whatsapp.com/send?phone=${targetNumber}&text=${encodeURIComponent(waText)}`;
+            if (additionalNote !== '') {
+                waText += `\nCatatan Tambahan :\n${additionalNote}\n`;
+            }
+
+            alert('Data berhasil diperbarui & disinkronkan ke Dashboard Admin!');
+            
+            // Penggunaan API langsung WhatsApp untuk mencegah karakter ikon terdistorsi
+            const encodedText = encodeURIComponent(waText);
+            const waLink = `https://api.whatsapp.com/send?phone=${targetNumber}&text=${encodedText}`;
+            window.location.href = waLink;
         }
     </script>
 </body>
