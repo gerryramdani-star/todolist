@@ -81,22 +81,68 @@
     </div>
 
     <script>
-        // 🔴🔴🔴🔴🔴 PASTE URL WEB APP ANDA DI SINI 🔴🔴🔴🔴🔴
-        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxl_2pyY7BzJ-KiFfRsIZutYMv734izxp-G3kFFoX3BdQ6xb9EahCbp5bfbX98gfpII/exec'; 
+        // URL Web App Google Apps Script
+        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyol_ag_vJRqG7LFSPLQY8wiQFuJsCOnKBm73y_V17MVMUIUkp1n9KMtphapOUfuCKP/exec'; 
 
+        // Konfigurasi Divisi & Bobot Poin Terbaru
         const TEAM_CONFIG = {
-            'Content Writer': { target: 16, members: ['Anne', 'Natasya', 'Widia'], defaultPoint: 1.0, rules: [] },
-            'Graphic Designer': { target: 14, members: ['Muqita', 'Qalbi', 'Raditya', 'Ramsat'], defaultPoint: 1.0, rules: [{keyword:'carousel', point:3.5}] },
-            'Video Editor': { target: 9, members: ['Adi Julian', 'Ghaly', 'Raihani'], defaultPoint: 1.0, rules: [{keyword:'edukasi', point:2.25}] },
-            'Videografer': { target: 12, members: ['Dzakwan'], defaultPoint: 1.0, rules: [{keyword:'visit', point:6}, {keyword:'full', point:12}] },
-            'Advertiser': { target: 12, members: ['Gerry', 'Ikmal'], defaultPoint: 1.5, rules: [] },
+            'Content Writer': { 
+                target: 16, 
+                members: ['Anne', 'Natasya', 'Widia'], 
+                defaultPoint: 1.0, 
+                rules: [
+                    {keyword:'podcast', point:16},
+                    {keyword:'shooting', point:3}
+                ] 
+            },
+            'Graphic Designer': { 
+                target: 14, 
+                members: ['Muqita', 'Qalbi', 'Raditya', 'Ramsat'], 
+                defaultPoint: 1.0, 
+                rules: [
+                    {keyword:'podcast', point:14},
+                    {keyword:'shooting', point:2.6},
+                    {keyword:'carousel', point:3.5}
+                ] 
+            },
+            'Video Editor': { 
+                target: 9, 
+                members: ['Adi Julian', 'Ghaly', 'Raihani'], 
+                defaultPoint: 1.0, 
+                rules: [
+                    {keyword:'podcast', point:9},
+                    {keyword:'shooting', point:1.7},
+                    {keyword:'edukasi', point:2.25}
+                ] 
+            },
+            'Videografer': { 
+                target: 12, 
+                members: ['Dzakwan'], 
+                defaultPoint: 1.0, 
+                rules: [
+                    {keyword:'podcast', point:12},
+                    {keyword:'shooting', point:2.3},
+                    {keyword:'visit', point:6}, 
+                    {keyword:'full', point:12}
+                ] 
+            },
+            'Advertiser': { 
+                target: 12, 
+                members: ['Gerry', 'Ikmal'], 
+                defaultPoint: 1.5, 
+                rules: [
+                    {keyword:'podcast', point:12}
+                ] 
+            },
             'KOL Specialist': { 
                 target: 18, 
                 members: ['Ayunda'], 
                 defaultPoint: 1.0, 
                 rules: [
+                    {keyword:'podcast', point: 18},
                     {keyword:'report bulanan', point: 8},
                     {keyword:'brief campaign', point: 8},
+                    {keyword:'shooting', point: 4},
                     {keyword:'riset, meet, briefing', point: 2.5},
                     {keyword:'buat dashboard', point: 2.5},
                     {keyword:'finishing campaign', point: 1.3},
@@ -112,8 +158,10 @@
                 members: ['Zhera'], 
                 defaultPoint: 1.0, 
                 rules: [
+                    {keyword:'podcast', point: 14},
                     {keyword:'visit full, 8 jam, visit half, 4 jam', point: 14},
                     {keyword:'report, insight, monthly', point: 6},
+                    {keyword:'shooting', point: 3},
                     {keyword:'riset, reminder, meet, meeting', point: 2},
                     {keyword:'upload, posting', point: 0.2}
                 ] 
@@ -123,9 +171,11 @@
                 members: ['Wanda'], 
                 defaultPoint: 1.0, 
                 rules: [
+                    {keyword:'podcast', point: 14},
                     {keyword:'revisi proposal, revisi deck', point: 4},
                     {keyword:'proposal, deck', point: 6},
                     {keyword:'prospek, meeting', point: 3},
+                    {keyword:'shooting', point: 3},
                     {keyword:'surat', point: 0.7},
                     {keyword:'mou', point: 0.5},
                     {keyword:'follow up, lead, crm', point: 0.35}
@@ -135,12 +185,11 @@
 
         function toTitleCase(str) { return str ? str.toLowerCase().replace(/(?:^|\s)\S/g, function(a) { return a.toUpperCase(); }) : ''; }
 
-        // Memicu sinkronisasi dari server ketika klik di luar kotak input
         function formatPICInputName() {
             const inputEl = document.getElementById('pic-name');
             if (inputEl) {
                 inputEl.value = toTitleCase(inputEl.value);
-                fetchServerData(); // Sinkronisasi Cloud
+                fetchServerData();
             }
         }
 
@@ -277,7 +326,7 @@
                 let textEl = row.querySelector('.task-edit-input');
                 let statusEl = row.querySelector('.status-picker');
                 
-                // MENGHITUNG ESTIMASI: Dihitung selama tugas ada isinya dan status BUKAN 'Cancel'
+                // MENGHITUNG ESTIMASI SEMUA TUGAS KECUALI CANCEL
                 if (textEl && textEl.value.trim() !== '' && statusEl && statusEl.value !== 'Cancel') {
                     let res = parseTaskQtyAndPoin(name, textEl.value.trim());
                     grandTotalPoin += res.totalPoin;
@@ -290,7 +339,7 @@
                     notificationEl.style.background = '#fef2f2';
                     notificationEl.style.color = '#991b1b';
                     notificationEl.style.border = '1px solid #fca5a5';
-                    notificationEl.innerHTML = `⚠️ <b>Perhatian (${role}):</b> Total estimasi saat ini (<b>${grandTotalPoin} Poin</b>) belum memenuhi Target KPI Harian (<b>${targetKPI} Poin</b>).`;
+                    notificationEl.innerHTML = `⚠️️ <b>Perhatian (${role}):</b> Total estimasi saat ini (<b>${grandTotalPoin} Poin</b>) belum memenuhi Target KPI Harian (<b>${targetKPI} Poin</b>).`;
                 } else {
                     notificationEl.style.background = '#f0fdf4';
                     notificationEl.style.color = '#166534';
@@ -312,9 +361,6 @@
             }
         }
 
-        // ==========================================
-        // FITUR BARU: TARIK DATA DARI GOOGLE SHEETS
-        // ==========================================
         function fetchServerData() {
             const rawName = document.getElementById('pic-name').value.trim();
             if (!rawName) return;
@@ -331,7 +377,6 @@
             const container = document.getElementById('existing-task-container');
             existingSection.style.display = 'block';
             
-            // Animasi Loading
             container.innerHTML = `<div style="text-align:center; padding:15px; color:#2563eb; font-weight:600; background:#e0f2fe; border-radius:6px;">⏳ Menyinkronkan data dari server...</div>`;
 
             if (GOOGLE_SCRIPT_URL === 'MASUKKAN_URL_WEB_APP_ANDA_DISINI') {
@@ -339,13 +384,11 @@
                 return;
             }
 
-            // Melakukan request pembacaan data ke Google
             fetch(`${GOOGLE_SCRIPT_URL}?action=getTasks&nama=${encodeURIComponent(name)}&tanggal=${today}`, { redirect: 'follow' })
             .then(res => res.json())
             .then(data => {
                 if (data.status === 'sukses') {
                     let db = JSON.parse(localStorage.getItem('daily_report_db')) || [];
-                    // Hapus data lokal hari ini, ganti dengan yang dari Server
                     db = db.filter(d => !(d.tanggal === today && d.nama.toLowerCase() === name.toLowerCase()));
                     
                     data.data.forEach(item => {
@@ -361,7 +404,7 @@
                         });
                     });
                     localStorage.setItem('daily_report_db', JSON.stringify(db));
-                    checkLocalTasks(); // Tampilkan datanya
+                    checkLocalTasks();
                 } else {
                     checkLocalTasks();
                 }
@@ -474,7 +517,6 @@
             let db = JSON.parse(localStorage.getItem('daily_report_db')) || [];
             let today = getTodayISO();
             
-            // Format waktu dengan tanda petik agar tidak diubah oleh google sheets
             let currentTime = "'" + new Date().toLocaleTimeString('id-ID', {hour: '2-digit', minute:'2-digit'}).replace('.', ':'); 
             
             const taskRows = document.querySelectorAll('#existing-task-container .task-row');
@@ -497,8 +539,7 @@
                 let taskText = textEl.value.trim();
                 let taskDeadline = deadlineEl ? deadlineEl.value : '';
                 
-                // MENGHAPUS PAKSAAN 'Belum'
-                // Jika status tidak dipilih, biarkan menjadi string kosong ('')
+                // MENGIZINKAN STATUS KOSONG
                 let taskStatus = statusEl.value || ''; 
                 
                 let taskKet = ((taskStatus === 'Belum' || taskStatus === 'Cancel') && ketEl) ? ketEl.value.trim() : '';
@@ -542,7 +583,7 @@
             });
             localStorage.setItem('daily_report_db', JSON.stringify(db));
 
-            // FORMAT PESAN WA
+            // FORMAT PESAN WA KHUSUS (Hanya Selesai yang dicentang)
             let waText = `To Do List *${name}* *(${getTodayFormatted()})*:\n\n`;
             let ketList = [];
 
