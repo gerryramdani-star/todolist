@@ -82,7 +82,7 @@
 
     <script>
         // URL Web App Google Apps Script
-        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyol_ag_vJRqG7LFSPLQY8wiQFuJsCOnKBm73y_V17MVMUIUkp1n9KMtphapOUfuCKP/exec'; 
+        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxl_2pyY7BzJ-KiFfRsIZutYMv734izxp-G3kFFoX3BdQ6xb9EahCbp5bfbX98gfpII/exec'; 
 
         // Konfigurasi Divisi & Bobot Poin Terbaru
         const TEAM_CONFIG = {
@@ -273,20 +273,36 @@
             }
 
             let qty = 1;
-            const rangeMatch = taskText.match(/(?:tgl|tanggal)?\s*(\d{1,2})\s*(?:-|s\/d|sampai)\s*(\d{1,2})/i);
-            const listMatch = taskText.match(/(?:tgl|tanggal)?\s*(\d{1,2}(?:\s*(?:,|&|\bdan\b)\s*\d{1,2})+)/i);
 
-            if (rangeMatch) {
-                const start = parseInt(rangeMatch[1], 10);
-                const end = parseInt(rangeMatch[2], 10);
-                if (end >= start && end <= 31 && start >= 1) qty = (end - start + 1);
-            } else if (listMatch) {
-                const numbers = listMatch[0].match(/\d{1,2}/g);
-                if (numbers) {
-                    const validDays = numbers.filter(n => { let num = parseInt(n, 10); return num >= 1 && num <= 31; });
-                    if (validDays.length > 0) qty = validDays.length;
+            // 1. Deteksi Format Khusus QTY (Prioritas Utama)
+            let matchKurung = taskText.match(/\((\d+)\)/); // Contoh: (3)
+            let matchX = taskText.match(/(?:^|\s)(\d+)x\b/i); // Contoh: 3x
+            let matchQty = taskText.match(/\b(?:qty|jumlah)\s*(\d+)\b/i); // Contoh: qty 3 atau jumlah 3
+
+            if (matchKurung) {
+                qty = parseInt(matchKurung[1], 10);
+            } else if (matchX) {
+                qty = parseInt(matchX[1], 10);
+            } else if (matchQty) {
+                qty = parseInt(matchQty[1], 10);
+            } else {
+                // 2. Fallback: Deteksi dari rentang tanggal existing (jika tidak ada format khusus)
+                const rangeMatch = taskText.match(/(?:tgl|tanggal)?\s*(\d{1,2})\s*(?:-|s\/d|sampai)\s*(\d{1,2})/i);
+                const listMatch = taskText.match(/(?:tgl|tanggal)?\s*(\d{1,2}(?:\s*(?:,|&|\bdan\b)\s*\d{1,2})+)/i);
+
+                if (rangeMatch) {
+                    const start = parseInt(rangeMatch[1], 10);
+                    const end = parseInt(rangeMatch[2], 10);
+                    if (end >= start && end <= 31 && start >= 1) qty = (end - start + 1);
+                } else if (listMatch) {
+                    const numbers = listMatch[0].match(/\d{1,2}/g);
+                    if (numbers) {
+                        const validDays = numbers.filter(n => { let num = parseInt(n, 10); return num >= 1 && num <= 31; });
+                        if (validDays.length > 0) qty = validDays.length;
+                    }
                 }
             }
+            
             return { qty: qty, totalPoin: basePt * qty };
         }
 
