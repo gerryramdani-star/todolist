@@ -96,7 +96,7 @@
         const TEAM_CONFIG = {
             'Content Writer': { 
                 target: 16, 
-                members: ['Natasya', 'Widia'], 
+                members: ['Anne', 'Natasya', 'Widia'], 
                 defaultPoint: 1.0, 
                 rules: [
                     {keyword:'podcast', point:16},
@@ -105,7 +105,7 @@
             },
             'Graphic Designer': { 
                 target: 14, 
-                members: ['Muqita', 'Qalbi', 'Ghaly', 'Syafa', 'Taura'], 
+                members: ['Muqita', 'Qalbi', 'Raditya', 'Ramsat', 'Syafa', 'Taura'], 
                 defaultPoint: 1.0, 
                 rules: [
                     {keyword:'podcast', point:14},
@@ -115,7 +115,7 @@
             },
             'Video Editor': { 
                 target: 9, 
-                members: ['Adi Julian'], 
+                members: ['Adi Julian', 'Ghaly', 'Raihani'], 
                 defaultPoint: 1.0, 
                 rules: [
                     {keyword:'podcast', point:9},
@@ -130,6 +130,7 @@
                 rules: [
                     {keyword:'podcast', point:12},
                     {keyword:'shooting', point:2.3},
+                    {keyword:'edukasi', point:2.25},
                     {keyword:'visit', point:6}, 
                     {keyword:'full', point:12}
                 ] 
@@ -189,6 +190,12 @@
                     {keyword:'follow up, lead, crm', point: 0.35}
                 ] 
             }
+        };
+
+        // Konfigurasi Karyawan Hybrid (Merangkap lebih dari 1 divisi)
+        // Poin akan otomatis membaca gabungan kata kunci dari semua divisi yang terdaftar
+        const HYBRID_MEMBERS = {
+            'Dzakwan': ['Videografer', 'Video Editor']
         };
 
         let syncTimeout = null;
@@ -305,17 +312,47 @@
             return null;
         }
 
+        // Mengambil daftar semua divisi yang dipegang oleh karyawan (mendukung Hybrid)
+        function getRolesForMember(name) {
+            if (!name) return [];
+            const cleanName = toTitleCase(name.trim());
+            for (const [hybridName, roles] of Object.entries(HYBRID_MEMBERS)) {
+                if (hybridName.toLowerCase() === cleanName.toLowerCase()) {
+                    return roles;
+                }
+            }
+            const primaryRole = getRoleByName(cleanName);
+            return primaryRole ? [primaryRole] : [];
+        }
+
         function parseTaskQtyAndPoin(name, taskText) {
             if (!taskText) return { qty: 0, totalPoin: 0 };
-            const role = getRoleByName(name) || 'Content Writer';
-            const config = TEAM_CONFIG[role];
-            let basePt = config ? config.defaultPoint : 1.0;
+            const roles = getRolesForMember(name);
+            const primaryRole = roles[0] || 'Content Writer';
+            const primaryConfig = TEAM_CONFIG[primaryRole];
+            let basePt = primaryConfig ? primaryConfig.defaultPoint : 1.0;
 
-            if (config && config.rules) {
+            // Gabungkan semua rules dari divisi yang dipegang (Utama + Hybrid)
+            let combinedRules = [];
+            roles.forEach(rName => {
+                if (TEAM_CONFIG[rName] && TEAM_CONFIG[rName].rules) {
+                    combinedRules = combinedRules.concat(TEAM_CONFIG[rName].rules);
+                }
+            });
+
+            if (combinedRules.length > 0) {
                 let lowerTask = taskText.toLowerCase();
-                for (let r of config.rules) {
+                let matchedPoints = [];
+                for (let r of combinedRules) {
                     let kws = r.keyword.split(',').map(k=>k.trim().toLowerCase()).filter(k=>k);
-                    if (kws.some(kw => lowerTask.includes(kw))) { basePt = r.point; break; }
+                    if (kws.some(kw => lowerTask.includes(kw))) {
+                        matchedPoints.push(r.point);
+                    }
+                }
+                // Jika ada keyword yang cocok (termasuk jika keyword ada di kedua divisi),
+                // ambil nilai poin tertinggi agar karyawan hybrid tidak dirugikan
+                if (matchedPoints.length > 0) {
+                    basePt = Math.max(...matchedPoints);
                 }
             }
 
@@ -381,6 +418,8 @@
                 return;
             }
 
+            const roles = getRolesForMember(name);
+            const roleLabel = roles.length > 1 ? `${roles.join(' + ')} [Hybrid]` : role;
             const targetKPI = TEAM_CONFIG[role] ? TEAM_CONFIG[role].target : 10;
             let grandTotalPoin = 0;
             const taskRows = document.querySelectorAll('#existing-task-container .task-row');
@@ -402,12 +441,12 @@
                     notificationEl.style.background = '#fef2f2';
                     notificationEl.style.color = '#991b1b';
                     notificationEl.style.border = '1px solid #fca5a5';
-                    notificationEl.innerHTML = `⚠ <b>Perhatian (${role}):</b> Total estimasi saat ini (<b>${grandTotalPoin} Poin</b>) belum memenuhi Target KPI Harian (<b>${targetKPI} Poin</b>).`;
+                    notificationEl.innerHTML = `⚠ <b>Perhatian (${roleLabel}):</b> Total estimasi saat ini (<b>${grandTotalPoin} Poin</b>) belum memenuhi Target KPI Harian (<b>${targetKPI} Poin</b>).`;
                 } else {
                     notificationEl.style.background = '#f0fdf4';
                     notificationEl.style.color = '#166534';
                     notificationEl.style.border = '1px solid #86efac';
-                    notificationEl.innerHTML = `✅ <b>Mantap (${role}):</b> Total estimasi saat ini (<b>${grandTotalPoin} Poin</b>) telah memenuhi Target KPI Harian (<b>${targetKPI} Poin</b>)!`;
+                    notificationEl.innerHTML = `✅ <b>Mantap (${roleLabel}):</b> Total estimasi saat ini (<b>${grandTotalPoin} Poin</b>) telah memenuhi Target KPI Harian (<b>${targetKPI} Poin</b>)!`;
                 }
             }
         }
