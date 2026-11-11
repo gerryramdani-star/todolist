@@ -403,23 +403,26 @@
             fetch(`${GOOGLE_SCRIPT_URL}?action=getTasks&nama=${encodeURIComponent(name)}&tanggal=${today}`, { redirect: 'follow' })
             .then(res => res.json())
             .then(data => {
-                if (data.status === 'sukses') {
+                // Mendukung status 'sukses' maupun 'success'
+                if (data.status === 'sukses' || data.status === 'success' || data.success === true) {
                     let db = JSON.parse(localStorage.getItem('daily_report_db')) || [];
                     db = db.filter(d => !(d.tanggal === today && d.nama.toLowerCase() === name.toLowerCase()));
                     
-                    data.data.forEach(item => {
-                        db.push({
-                            id: item.id,
-                            nama: name,
-                            klien: item.klien,
-                            tanggal: today,
-                            task: item.task,
-                            deadline: item.deadline,
-                            keterangan: item.keterangan,
-                            status: item.status,
-                            isCarryOver: item.isCarryOver || false
+                    if (Array.isArray(data.data)) {
+                        data.data.forEach(item => {
+                            db.push({
+                                id: item.id || ('sync_' + Math.random().toString(36).substr(2, 9)),
+                                nama: name,
+                                klien: item.klien || '',
+                                tanggal: today,
+                                task: item.task || '',
+                                deadline: item.deadline || '',
+                                keterangan: item.keterangan || '',
+                                status: item.status || '',
+                                isCarryOver: item.isCarryOver || false
+                            });
                         });
-                    });
+                    }
                     localStorage.setItem('daily_report_db', JSON.stringify(db));
                     checkLocalTasks();
                 } else {
