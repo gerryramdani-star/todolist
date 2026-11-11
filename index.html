@@ -416,7 +416,8 @@
                             task: item.task,
                             deadline: item.deadline,
                             keterangan: item.keterangan,
-                            status: item.status
+                            status: item.status,
+                            isCarryOver: item.isCarryOver || false
                         });
                     });
                     localStorage.setItem('daily_report_db', JSON.stringify(db));
@@ -462,11 +463,13 @@
                     
                     let showKetStyle = (statusVal === 'Belum' || statusVal === 'Cancel') ? 'display: block;' : 'display: none;';
                     let ketPlaceholder = (statusVal === 'Cancel') ? 'Ket. alasan cancel...' : 'Ket. jika belum selesai...';
+                    let carryBadge = t.isCarryOver ? '<span style="background:#fef3c7; color:#92400e; font-size:11px; font-weight:700; padding:2px 7px; border-radius:4px; border:1px solid #fde68a; display:inline-block; align-self:center;" title="Tugas bawaan dari hari sebelumnya yang masih On Progress">⏳ Lanjutan</span>' : '';
                     
                     let row = document.createElement('div');
                     row.className = 'task-row';
                     row.setAttribute('data-id', t.id);
                     row.innerHTML = `
+                        ${carryBadge}
                         <input type="text" class="task-client-input" id="client-${t.id}" value="${clientVal}" placeholder="Nama Klien...">
                         <input type="text" class="task-edit-input" id="text-${t.id}" value="${t.task}" placeholder="Tugas..." oninput="updateKPICheck()">
                         <input type="date" class="task-deadline-input" id="deadline-${t.id}" value="${deadlineVal}">
@@ -478,7 +481,8 @@
                             <option value="Cancel" ${statusVal === 'Cancel' ? 'selected':''}>Cancel</option>
                         </select>
                         <input type="text" class="task-ket-input" id="ket-${t.id}" value="${ketVal}" placeholder="${ketPlaceholder}" style="${showKetStyle}">
-                        <button type="button" style="width:32px; background:#dc2626; color:white; border:none; border-radius:4px; cursor:pointer; padding:6px;" onclick="removeTaskItem(this, '${t.id}')">X</button>
+                        <button type="button" style="width:32px; background:#3b82f6; color:white; border:none; border-radius:4px; cursor:pointer; padding:6px;" title="Duplikat Tugas" onclick="duplicateTaskRow(this)">📑</button>
+                        <button type="button" style="width:32px; background:#dc2626; color:white; border:none; border-radius:4px; cursor:pointer; padding:6px;" title="Hapus Tugas" onclick="removeTaskItem(this, '${t.id}')">X</button>
                     `;
                     container.appendChild(row);
                 });
@@ -504,9 +508,43 @@
                     <option value="Cancel">Cancel</option>
                 </select>
                 <input type="text" class="task-ket-input" id="ket-${newId}" placeholder="Ket. jika belum selesai..." style="display: none;">
-                <button type="button" style="width:32px; background:#dc2626; color:white; border:none; border-radius:4px; cursor:pointer; padding:6px;" onclick="this.parentElement.remove(); updateKPICheck();">X</button>
+                <button type="button" style="width:32px; background:#3b82f6; color:white; border:none; border-radius:4px; cursor:pointer; padding:6px;" title="Duplikat Tugas" onclick="duplicateTaskRow(this)">📑</button>
+                <button type="button" style="width:32px; background:#dc2626; color:white; border:none; border-radius:4px; cursor:pointer; padding:6px;" title="Hapus Tugas" onclick="this.parentElement.remove(); updateKPICheck();">X</button>
             `;
             container.appendChild(row);
+            updateKPICheck();
+        }
+
+        function duplicateTaskRow(btn) {
+            const currentRow = btn.closest('.task-row');
+            const clientVal = currentRow.querySelector('.task-client-input').value;
+            const taskVal = currentRow.querySelector('.task-edit-input').value;
+            
+            let newId = 'new_' + Math.random().toString(36).substr(2, 9);
+            let row = document.createElement('div');
+            row.className = 'task-row';
+            row.setAttribute('data-id', newId);
+            
+            row.innerHTML = `
+                <input type="text" class="task-client-input" id="client-${newId}" placeholder="Nama Klien...">
+                <input type="text" class="task-edit-input new-task-field" id="text-${newId}" placeholder="Tugas baru hari ini..." oninput="updateKPICheck()">
+                <input type="date" class="task-deadline-input" id="deadline-${newId}">
+                <select class="status-picker status-Empty" id="status-${newId}" onchange="handleStatusChange(this)">
+                    <option value="" selected disabled>-- Status --</option>
+                    <option value="Belum">Belum</option>
+                    <option value="On Progress">On Progress</option>
+                    <option value="Selesai">Selesai</option>
+                    <option value="Cancel">Cancel</option>
+                </select>
+                <input type="text" class="task-ket-input" id="ket-${newId}" placeholder="Ket. jika belum selesai..." style="display: none;">
+                <button type="button" style="width:32px; background:#3b82f6; color:white; border:none; border-radius:4px; cursor:pointer; padding:6px;" title="Duplikat Tugas" onclick="duplicateTaskRow(this)">📑</button>
+                <button type="button" style="width:32px; background:#dc2626; color:white; border:none; border-radius:4px; cursor:pointer; padding:6px;" title="Hapus Tugas" onclick="this.parentElement.remove(); updateKPICheck();">X</button>
+            `;
+            
+            currentRow.insertAdjacentElement('afterend', row);
+            row.querySelector('.task-client-input').value = clientVal;
+            row.querySelector('.task-edit-input').value = taskVal;
+            
             updateKPICheck();
         }
 
