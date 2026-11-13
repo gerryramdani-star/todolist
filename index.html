@@ -7,12 +7,12 @@
     
     <style>
         * { box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; }
-        body { background-color: #f3f4f6; padding: 20px; display: flex; justify-content: center; }
+        body { background-color: #f3f4f6; padding: 20px; display: flex; justify-content: center; margin: 0; }
         .container { background: #ffffff; padding: 25px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); width: 100%; max-width: 880px; }
-        h2 { color: #1e3a8a; text-align: center; margin-bottom: 5px; }
-        .date-badge { text-align: center; font-size: 13px; font-weight: 600; color: #4b5563; margin-bottom: 20px; background: #e0f2fe; padding: 4px 10px; border-radius: 20px; display: inline-block; width: 100%;}
+        h2 { color: #1e3a8a; text-align: center; margin-bottom: 5px; margin-top: 5px; }
+        .date-badge { text-align: center; font-size: 13px; font-weight: 600; color: #4b5563; margin-bottom: 20px; background: #e0f2fe; padding: 5px 12px; border-radius: 20px; display: inline-block; width: 100%; }
         label { font-weight: 600; font-size: 14px; margin-bottom: 6px; display: block; color: #374151; }
-        input, select, textarea { width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; margin-bottom: 15px; font-size: 14px;}
+        input, select, textarea { width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; margin-bottom: 15px; font-size: 14px; }
         
         .pic-input-group { display: flex; gap: 8px; align-items: stretch; margin-bottom: 15px; }
         .pic-input-group input { margin-bottom: 0; flex: 1; }
@@ -22,12 +22,13 @@
         .task-row.carry-over-row { background: #fffbeb; border-color: #fde68a; }
         .task-client-input { flex: 1; min-width: 120px; margin-bottom: 0; padding: 6px; font-size: 12px; border: 1px solid #d1d5db; border-radius: 6px; background: #ffffff; }
         .task-edit-input { flex: 2; min-width: 160px; margin-bottom: 0; font-size: 13.5px; background: #ffffff; }
-        .task-deadline-input { width: 120px; margin-bottom: 0; padding: 6px; font-size: 12px; border: 1px solid #d1d5db; border-radius: 6px; background: #ffffff; }
-        .status-picker { width: 110px; padding: 6px; font-size: 12px; font-weight: 600; border-radius: 20px; margin-bottom: 0;}
+        .task-deadline-input { width: 125px; margin-bottom: 0; padding: 6px; font-size: 12px; border: 1px solid #d1d5db; border-radius: 6px; background: #ffffff; }
+        .status-picker { width: 115px; padding: 6px; font-size: 12px; font-weight: 600; border-radius: 20px; margin-bottom: 0; }
         .task-ket-input { flex: 1.2; min-width: 130px; margin-bottom: 0; padding: 6px; font-size: 12px; border: 1px solid #d1d5db; border-radius: 6px; background: #ffffff; display: none; }
 
         button { background: #2563eb; color: white; border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; font-weight: 600; width: 100%; transition: 0.2s; }
-        button:hover { opacity: 0.9; }
+        button:hover { opacity: 0.92; }
+        button:disabled { opacity: 0.65; cursor: not-allowed; }
         .btn-add { background: #f3f4f6; color: #2563eb; border: 1px dashed #2563eb; margin-bottom: 10px; }
         .btn-note-toggle { background: #f8fafc; color: #475569; border: 1px dashed #94a3b8; margin-bottom: 15px; text-align: left; font-size: 13px; }
         .btn-submit { background: #16a34a; font-size: 15px; padding: 12px; margin-top: 10px; }
@@ -41,15 +42,18 @@
         .status-Selesai { background: #dcfce7; color: #166534; border-color: #86efac; }
         .status-Cancel { background: #e5e7eb; color: #374151; border-color: #d1d5db; }
 
+        /* Modal Notifikasi & Konfirmasi */
         #custom-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; z-index: 1000; padding: 20px; }
-        .modal-content { background: #ffffff; padding: 25px; border-radius: 12px; max-width: 400px; width: 100%; text-align: center; box-shadow: 0 10px 15px rgba(0,0,0,0.1); }
-        .modal-content p { font-size: 15px; color: #374151; margin-bottom: 20px; font-weight: 500; }
-        .modal-buttons button { width: auto; min-width: 80px; margin: 0 5px; padding: 8px 16px; }
+        .modal-content { background: #ffffff; padding: 25px; border-radius: 12px; max-width: 420px; width: 100%; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.15); }
+        .modal-content p { font-size: 14.5px; color: #374151; margin-bottom: 20px; font-weight: 500; line-height: 1.5; }
+        .modal-buttons { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+        .modal-buttons button { width: auto; min-width: 85px; padding: 9px 16px; }
 
-        /* Styling Modal Pengaturan Konfigurasi Divisi & Keyword */
-        .top-toolbar { display: flex; justify-content: flex-end; margin-bottom: 10px; }
-        .btn-config-open { width: auto; background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; padding: 6px 12px; font-size: 12px; border-radius: 20px; display: inline-flex; align-items: center; gap: 5px; }
+        /* Toolbar Atas & Modal Pengaturan Konfigurasi Divisi & Keyword */
+        .top-toolbar { display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+        .btn-config-open { width: auto; background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; padding: 6px 12px; font-size: 12px; border-radius: 20px; display: inline-flex; align-items: center; gap: 6px; }
         .btn-config-open:hover { background: #dbeafe; }
+
         #config-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); align-items: center; justify-content: center; z-index: 950; padding: 16px; }
         .config-modal-box { background: #ffffff; border-radius: 14px; width: 100%; max-width: 680px; max-height: 90vh; display: flex; flex-direction: column; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.15); overflow: hidden; }
         .config-modal-header { padding: 16px 20px; background: #1e3a8a; color: #ffffff; display: flex; justify-content: space-between; align-items: center; }
@@ -67,15 +71,16 @@
 
         /* Styling Panel Diagnostik Server */
         .diag-panel { display: none; margin-bottom: 16px; background: #0f172a; color: #e2e8f0; padding: 14px; border-radius: 10px; font-size: 12px; border: 1px solid #334155; }
-        .diag-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; border-bottom: 1px solid #334155; padding-bottom: 6px; }
+        .diag-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; border-bottom: 1px solid #334155; padding-bottom: 6px; flex-wrap: wrap; gap: 6px; }
         .diag-log-box { background: #020617; color: #38bdf8; font-family: monospace; font-size: 11.5px; padding: 10px; border-radius: 6px; max-height: 170px; overflow-y: auto; white-space: pre-wrap; line-height: 1.45; }
-        .diag-badge { padding: 2px 8px; border-radius: 12px; font-size: 10.5px; font-weight: 700; }
+        .diag-badge { padding: 3px 9px; border-radius: 12px; font-size: 10.5px; font-weight: 700; }
     </style>
 </head>
 <body>
 
     <div class="container">
-        <div class="top-toolbar" style="justify-content: space-between; gap: 8px; flex-wrap: wrap;">
+        <!-- TOOLBAR DIAGNOSTIK & PENGATURAN -->
+        <div class="top-toolbar">
             <button type="button" class="btn-config-open" style="background:#f8fafc; color:#334155; border-color:#cbd5e1;" onclick="toggleDiagnosticPanel()">
                 🩺 Cek Diagnostik & Status Server <span id="diag-status-dot" style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#94a3b8;"></span>
             </button>
@@ -119,6 +124,7 @@
 
         <div id="existing-section" class="section-box">
             <div id="kpi-notification"></div>
+            <div id="bg-scan-banner" style="display:none; margin-bottom:10px; padding:7px 12px; border-radius:6px; background:#e0f2fe; color:#0369a1; font-size:12px; font-weight:600;"></div>
 
             <label style="color:#1e40af; margin-bottom:10px;">⚡ Daftar Tugas Hari Ini (Bisa edit nama klien, redaksi, status, deadline, & keterangan):</label>
             <div id="existing-task-container"></div>
@@ -136,6 +142,7 @@
         </div>
     </div>
 
+    <!-- MODAL NOTIFIKASI & KONFIRMASI -->
     <div id="custom-modal">
         <div class="modal-content">
             <p id="modal-text"></p>
@@ -151,12 +158,22 @@
                 <button type="button" onclick="closeDivisionConfigModal()" style="width:auto; background:transparent; color:white; font-size:18px; padding:0 6px;">✕</button>
             </div>
             <div class="config-modal-body">
-                <div style="display:flex; gap:8px; align-items:flex-end; margin-bottom:14px;">
+                <div style="display:flex; gap:8px; align-items:flex-end; margin-bottom:10px;">
                     <div style="flex:1;">
                         <label style="margin-bottom:4px;">Pilih Divisi yang Ingin Diatur:</label>
                         <select id="cfg-division-select" onchange="renderDivisionConfigForm()" style="margin-bottom:0; font-weight:600; color:#1e3a8a;"></select>
                     </div>
-                    <button type="button" onclick="promptAddNewDivision()" style="width:auto; background:#0284c7; padding:10px 12px; font-size:12px; white-space:nowrap;">+ Divisi Baru</button>
+                    <button type="button" onclick="showNewDivisionInline()" style="width:auto; background:#0284c7; padding:10px 12px; font-size:12px; white-space:nowrap;">+ Divisi Baru</button>
+                </div>
+
+                <!-- Input Inline Tambah Divisi Baru (Bebas prompt() browser) -->
+                <div id="new-division-inline-box" style="display:none; background:#f0f9ff; border:1px solid #7dd3fc; padding:10px; border-radius:8px; margin-bottom:12px;">
+                    <label style="font-size:12px; color:#0369a1; margin-bottom:5px;">Nama Divisi Baru:</label>
+                    <div style="display:flex; gap:6px;">
+                        <input type="text" id="new-division-name-input" placeholder="Contoh: UI/UX Designer" style="margin-bottom:0; padding:7px 10px; font-size:13px; background:#fff;">
+                        <button type="button" onclick="confirmAddNewDivision()" style="width:auto; background:#0284c7; padding:7px 14px; font-size:12px;">Tambah</button>
+                        <button type="button" onclick="cancelAddNewDivision()" style="width:auto; background:#64748b; padding:7px 10px; font-size:12px;">Batal</button>
+                    </div>
                 </div>
 
                 <div style="background:#f0f9ff; border:1px solid #bae6fd; padding:12px; border-radius:8px; margin-bottom:15px;">
@@ -314,7 +331,7 @@
             'Dzakwan': ['Videografer', 'Video Editor']
         };
 
-        // Muat konfigurasi aktif (Prioritas dari penyimpanan kustom, jika belum ada pakai Default)
+        // Muat konfigurasi aktif
         let TEAM_CONFIG = JSON.parse(localStorage.getItem(STORAGE_TEAM_CONFIG_KEY)) || JSON.parse(JSON.stringify(DEFAULT_TEAM_CONFIG));
         let HYBRID_MEMBERS = JSON.parse(localStorage.getItem(STORAGE_HYBRID_CONFIG_KEY)) || JSON.parse(JSON.stringify(DEFAULT_HYBRID_MEMBERS));
         let activeEditedDivision = null;
@@ -327,6 +344,9 @@
         let activeBgControllers = [];
         let currentSyncRequestId = 0;
 
+        // =====================================================================
+        // DIAGNOSTIK KONEKSI & SERVER
+        // =====================================================================
         function logDiag(msg) {
             const box = document.getElementById('diag-log-output');
             if (!box) return;
@@ -383,7 +403,7 @@
                     document.getElementById('diag-badge-version').style.background = '#166534';
                     logDiag(`✅ SUKSES (${latency}ms): Server sudah menjalankan Script Versi Terbaru. Ditemukan ${itemsCount} baris tugas.`);
                 } else {
-                    document.getElementById('diag-badge-version').innerText = 'Versi Script: LAMA (Hanya Baca 1 Hari)';
+                    document.getElementById('diag-badge-version').innerText = 'Versi Script: LAMA (Mode Fallback Aktif)';
                     document.getElementById('diag-badge-version').style.background = '#b45309';
                     logDiag(`⚠️ PERHATIAN (${latency}ms): URL Web App Anda masih menjalankan DEPLOYMENT VERSI LAMA! Server hanya mengembalikan ${itemsCount} tugas untuk tanggal ${today}. Sistem browser akan otomatis menjalankan Mode Penarikan Bertahap 14 Hari.`);
                 }
@@ -392,7 +412,12 @@
             }
         }
 
-        function toTitleCase(str) { return str ? str.toLowerCase().replace(/(?:^|\s)\S/g, function(a) { return a.toUpperCase(); }) : ''; }
+        // =====================================================================
+        // FUNGSI HELPER UMUM & MODAL
+        // =====================================================================
+        function toTitleCase(str) {
+            return str ? str.toLowerCase().replace(/(?:^|\s)\S/g, function(a) { return a.toUpperCase(); }) : '';
+        }
 
         function handlePICInput() {
             clearTimeout(syncTimeout);
@@ -407,7 +432,6 @@
                 return;
             }
 
-            // Otomatis sinkron ke server begitu nama PIC valid selesai diketik
             syncTimeout = setTimeout(() => {
                 fetchServerData(false);
             }, 400);
@@ -419,19 +443,18 @@
             if (inputEl && inputEl.value.trim() !== '') {
                 const formatted = toTitleCase(inputEl.value.trim());
                 inputEl.value = formatted;
-                // Hindari request ganda saat onblur jika nama yang sama baru saja disinkronkan via oninput
                 if (forceRefresh || lastSyncedName.toLowerCase() !== formatted.toLowerCase()) {
                     fetchServerData(true);
                 }
             }
         }
 
-        function showAlert(msg, callback = null) {
+        function showAlert(msg, callback = null, extraActionHtml = '') {
             const modal = document.getElementById('custom-modal');
             const text = document.getElementById('modal-text');
             const buttons = document.getElementById('modal-buttons');
-            text.innerText = msg;
-            buttons.innerHTML = '<button onclick="closeModal(true)" style="background:#2563eb; color:white;">OK</button>';
+            text.innerHTML = msg;
+            buttons.innerHTML = `${extraActionHtml}<button type="button" onclick="closeModal(true)" style="background:#2563eb; color:white;">OK</button>`;
             modal.style.display = 'flex';
             modal.callback = callback;
         }
@@ -441,7 +464,7 @@
             const text = document.getElementById('modal-text');
             const buttons = document.getElementById('modal-buttons');
             text.innerText = msg;
-            buttons.innerHTML = `<button onclick="closeModal(true)" style="background:#dc2626; color:white;">Ya</button><button onclick="closeModal(false)" style="background:#6b7280; color:white;">Batal</button>`;
+            buttons.innerHTML = `<button type="button" onclick="closeModal(true)" style="background:#dc2626; color:white;">Ya</button><button type="button" onclick="closeModal(false)" style="background:#6b7280; color:white;">Batal</button>`;
             modal.style.display = 'flex';
             modal.callback = callback;
         }
@@ -449,7 +472,9 @@
         function closeModal(result) {
             const modal = document.getElementById('custom-modal');
             modal.style.display = 'none';
-            if (result && typeof modal.callback === 'function') modal.callback();
+            if (result && typeof modal.callback === 'function') {
+                modal.callback();
+            }
         }
 
         function getTodayISO() {
@@ -502,6 +527,9 @@
             syncConfigFromServer();
         };
 
+        // =====================================================================
+        // PENGATURAN KUSTOM KEYWORD, DIVISI & PIC HYBRID
+        // =====================================================================
         function updateCustomBadgeVisibility() {
             const badge = document.getElementById('custom-config-badge');
             if (badge) {
@@ -509,7 +537,6 @@
             }
         }
 
-        // Tarik konfigurasi keyword terbaru dari tab CONFIG_KEYWORD Google Sheets secara otomatis
         function syncConfigFromServer() {
             if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL === 'MASUKKAN_URL_WEB_APP_ANDA_DISINI') return;
             fetch(`${GOOGLE_SCRIPT_URL}?action=getConfig`, { redirect: 'follow' })
@@ -529,8 +556,190 @@
                 })
                 .catch(() => { /* Gunakan config lokal jika endpoint belum diperbarui */ });
         }
-// ... existing code ... -->
-            // Sinkronkan juga ke Google Sheets agar berlaku untuk semua perangkat tim
+
+        function openDivisionConfigModal() {
+            draftTeamConfig = JSON.parse(JSON.stringify(TEAM_CONFIG));
+            draftHybridMembers = JSON.parse(JSON.stringify(HYBRID_MEMBERS));
+            const rawName = document.getElementById('pic-name').value.trim();
+            const detectedRole = getRoleByName(toTitleCase(rawName));
+            const divisions = Object.keys(draftTeamConfig);
+            activeEditedDivision = (detectedRole && draftTeamConfig[detectedRole]) ? detectedRole : divisions[0];
+
+            cancelAddNewDivision();
+            populateDivisionSelectDropdown(activeEditedDivision);
+            renderDivisionConfigForm();
+            renderHybridMembersList();
+            document.getElementById('config-modal').style.display = 'flex';
+        }
+
+        function closeDivisionConfigModal() {
+            document.getElementById('config-modal').style.display = 'none';
+            draftTeamConfig = null;
+            draftHybridMembers = null;
+            activeEditedDivision = null;
+        }
+
+        function populateDivisionSelectDropdown(selectedDiv) {
+            const select = document.getElementById('cfg-division-select');
+            select.innerHTML = '';
+            Object.keys(draftTeamConfig).forEach(div => {
+                const opt = document.createElement('option');
+                opt.value = div;
+                opt.textContent = div;
+                if (div === selectedDiv) opt.selected = true;
+                select.appendChild(opt);
+            });
+        }
+
+        function showNewDivisionInline() {
+            const box = document.getElementById('new-division-inline-box');
+            const inp = document.getElementById('new-division-name-input');
+            if (box) {
+                box.style.display = 'block';
+                inp.value = '';
+                inp.focus();
+            }
+        }
+
+        function cancelAddNewDivision() {
+            const box = document.getElementById('new-division-inline-box');
+            if (box) box.style.display = 'none';
+        }
+
+        function confirmAddNewDivision() {
+            captureCurrentDivisionDraft();
+            const inp = document.getElementById('new-division-name-input');
+            const cleanDiv = toTitleCase((inp ? inp.value : '').trim());
+            if (!cleanDiv) return;
+            if (!draftTeamConfig[cleanDiv]) {
+                draftTeamConfig[cleanDiv] = {
+                    target: 10,
+                    members: [],
+                    defaultPoint: 1.0,
+                    rules: []
+                };
+            }
+            activeEditedDivision = cleanDiv;
+            cancelAddNewDivision();
+            populateDivisionSelectDropdown(cleanDiv);
+            renderDivisionConfigForm();
+        }
+
+        function captureCurrentDivisionDraft() {
+            if (!draftTeamConfig || !activeEditedDivision || !draftTeamConfig[activeEditedDivision]) return;
+            const targetVal = parseFloat(document.getElementById('cfg-target-input').value);
+            const defPtVal = parseFloat(document.getElementById('cfg-default-point-input').value);
+            const membersRaw = document.getElementById('cfg-members-input').value;
+
+            draftTeamConfig[activeEditedDivision].target = !isNaN(targetVal) ? targetVal : 0;
+            draftTeamConfig[activeEditedDivision].defaultPoint = !isNaN(defPtVal) ? defPtVal : 1.0;
+            draftTeamConfig[activeEditedDivision].members = membersRaw
+                .split(',')
+                .map(m => toTitleCase(m.trim()))
+                .filter(m => m !== '');
+
+            const rules = [];
+            document.querySelectorAll('#cfg-rules-container .keyword-rule-row').forEach(row => {
+                const kw = row.querySelector('.kw-text-field').value.trim().toLowerCase();
+                const pt = parseFloat(row.querySelector('.kw-point-field').value);
+                if (kw !== '' && !isNaN(pt)) {
+                    rules.push({ keyword: kw, point: pt });
+                }
+            });
+            draftTeamConfig[activeEditedDivision].rules = rules;
+        }
+
+        function renderDivisionConfigForm() {
+            const select = document.getElementById('cfg-division-select');
+            const nextDiv = select.value;
+            if (activeEditedDivision && activeEditedDivision !== nextDiv) {
+                captureCurrentDivisionDraft();
+            }
+            activeEditedDivision = nextDiv;
+            const divObj = draftTeamConfig[activeEditedDivision];
+            if (!divObj) return;
+
+            document.getElementById('cfg-target-input').value = divObj.target;
+            document.getElementById('cfg-default-point-input').value = divObj.defaultPoint;
+            document.getElementById('cfg-members-input').value = (divObj.members || []).join(', ');
+
+            const rulesContainer = document.getElementById('cfg-rules-container');
+            rulesContainer.innerHTML = '';
+            if (!divObj.rules || divObj.rules.length === 0) {
+                addKeywordRuleRow('', divObj.defaultPoint || 1);
+            } else {
+                divObj.rules.forEach(r => addKeywordRuleRow(r.keyword, r.point));
+            }
+        }
+
+        function addKeywordRuleRow(kw = '', pt = 1) {
+            const rulesContainer = document.getElementById('cfg-rules-container');
+            const row = document.createElement('div');
+            row.className = 'keyword-rule-row';
+            row.innerHTML = `
+                <input type="text" class="kw-text-field" placeholder="Kata kunci (misal: carousel, podcast)">
+                <input type="number" step="0.05" min="0" class="kw-point-field" placeholder="Poin">
+                <button type="button" class="btn-del-kw" title="Hapus Keyword" onclick="this.parentElement.remove()">X</button>
+            `;
+            row.querySelector('.kw-text-field').value = kw;
+            row.querySelector('.kw-point-field').value = pt;
+            rulesContainer.appendChild(row);
+        }
+
+        function renderHybridMembersList() {
+            const container = document.getElementById('cfg-hybrid-container');
+            container.innerHTML = '';
+            const entries = Object.entries(draftHybridMembers || {});
+            if (entries.length === 0) {
+                addHybridMemberRow('', '');
+            } else {
+                entries.forEach(([name, roles]) => addHybridMemberRow(name, (roles || []).join(', ')));
+            }
+        }
+
+        function addHybridMemberRow(name = '', rolesStr = '') {
+            const container = document.getElementById('cfg-hybrid-container');
+            const row = document.createElement('div');
+            row.className = 'keyword-rule-row';
+            row.style.background = '#ffffff';
+            row.innerHTML = `
+                <input type="text" class="hyb-name-field" style="flex:1;" placeholder="Nama PIC (misal: Dzakwan)">
+                <input type="text" class="hyb-roles-field" style="flex:2;" placeholder="Divisi (misal: Videografer, Video Editor)">
+                <button type="button" class="btn-del-kw" title="Hapus Hybrid" onclick="this.parentElement.remove()">X</button>
+            `;
+            row.querySelector('.hyb-name-field').value = name;
+            row.querySelector('.hyb-roles-field').value = rolesStr;
+            container.appendChild(row);
+        }
+
+        function saveDivisionConfig() {
+            captureCurrentDivisionDraft();
+
+            const newHybrid = {};
+            document.querySelectorAll('#cfg-hybrid-container .keyword-rule-row').forEach(row => {
+                const hName = toTitleCase(row.querySelector('.hyb-name-field').value.trim());
+                const hRoles = row.querySelector('.hyb-roles-field').value
+                    .split(',')
+                    .map(r => r.trim())
+                    .filter(r => r !== '');
+                if (hName && hRoles.length > 0) {
+                    newHybrid[hName] = hRoles;
+                }
+            });
+
+            TEAM_CONFIG = JSON.parse(JSON.stringify(draftTeamConfig));
+            HYBRID_MEMBERS = newHybrid;
+
+            localStorage.setItem(STORAGE_TEAM_CONFIG_KEY, JSON.stringify(TEAM_CONFIG));
+            localStorage.setItem(STORAGE_HYBRID_CONFIG_KEY, JSON.stringify(HYBRID_MEMBERS));
+            updateCustomBadgeVisibility();
+            updateKPICheck();
+
+            const saveBtn = document.getElementById('btn-save-div-config');
+            const origText = saveBtn.innerHTML;
+            saveBtn.innerHTML = '⏳ Menyimpan ke Spreadsheet...';
+            saveBtn.disabled = true;
+
             if (GOOGLE_SCRIPT_URL && GOOGLE_SCRIPT_URL !== 'MASUKKAN_URL_WEB_APP_ANDA_DISINI') {
                 const configPayload = JSON.stringify({
                     action: 'saveConfig',
@@ -572,12 +781,767 @@
                 showAlert('✅ Konfigurasi Keyword & Divisi berhasil diperbarui!');
             }
         }
-// ... existing code ... -->
+
+        function resetDivisionConfigToDefault() {
+            showConfirm('Kembalikan semua konfigurasi divisi & keyword ke pengaturan bawaan?', () => {
+                localStorage.removeItem(STORAGE_TEAM_CONFIG_KEY);
+                localStorage.removeItem(STORAGE_HYBRID_CONFIG_KEY);
+                TEAM_CONFIG = JSON.parse(JSON.stringify(DEFAULT_TEAM_CONFIG));
+                HYBRID_MEMBERS = JSON.parse(JSON.stringify(DEFAULT_HYBRID_MEMBERS));
+                updateCustomBadgeVisibility();
+                updateKPICheck();
+                closeDivisionConfigModal();
+                showAlert('🔄 Konfigurasi berhasil dikembalikan ke bawaan.');
+            });
+        }
+
+        // =====================================================================
+        // LOGIKA DIVISI, HYBRID & PERHITUNGAN POIN KPI
+        // =====================================================================
+        function getRoleByName(name) {
+            if (!name) return null;
+            const lower = name.trim().toLowerCase();
+            for (const [role, config] of Object.entries(TEAM_CONFIG)) {
+                if (config.members.some(m => m.toLowerCase() === lower)) return role;
+            }
+            return null;
+        }
+
+        function getRolesForMember(name) {
+            if (!name) return [];
+            const cleanName = toTitleCase(name.trim());
+            for (const [hybridName, roles] of Object.entries(HYBRID_MEMBERS)) {
+                if (hybridName.toLowerCase() === cleanName.toLowerCase()) {
+                    return roles;
+                }
+            }
+            const primaryRole = getRoleByName(cleanName);
+            return primaryRole ? [primaryRole] : [];
+        }
+
+        function parseTaskQtyAndPoin(name, taskText) {
+            if (!taskText) return { qty: 0, totalPoin: 0 };
+            const roles = getRolesForMember(name);
+            const primaryRole = roles[0] || 'Content Writer';
+            const primaryConfig = TEAM_CONFIG[primaryRole];
+            let basePt = primaryConfig ? primaryConfig.defaultPoint : 1.0;
+
+            let combinedRules = [];
+            roles.forEach(rName => {
+                if (TEAM_CONFIG[rName] && TEAM_CONFIG[rName].rules) {
+                    combinedRules = combinedRules.concat(TEAM_CONFIG[rName].rules);
+                }
+            });
+
+            if (combinedRules.length > 0) {
+                let lowerTask = taskText.toLowerCase();
+                let matchedPoints = [];
+                for (let r of combinedRules) {
+                    let kws = r.keyword.split(',').map(k => k.trim().toLowerCase()).filter(k => k);
+                    if (kws.some(kw => lowerTask.includes(kw))) {
+                        matchedPoints.push(r.point);
+                    }
+                }
+                if (matchedPoints.length > 0) {
+                    basePt = Math.max(...matchedPoints);
+                }
+            }
+
+            let qty = 1;
+            let matchKurung = taskText.match(/\((\d+)\)/);
+            let matchX = taskText.match(/(?:^|\s)(\d+)x\b/i);
+            let matchQty = taskText.match(/\b(?:qty|jumlah)\s*(\d+)\b/i);
+
+            if (matchKurung) {
+                qty = parseInt(matchKurung[1], 10);
+            } else if (matchX) {
+                qty = parseInt(matchX[1], 10);
+            } else if (matchQty) {
+                qty = parseInt(matchQty[1], 10);
+            } else {
+                const rangeMatch = taskText.match(/(?:tgl|tanggal)?\s*(\d{1,2})\s*(?:-|s\/d|sampai)\s*(\d{1,2})/i);
+                const listMatch = taskText.match(/(?:tgl|tanggal)?\s*(\d{1,2}(?:\s*(?:,|&|\bdan\b)\s*\d{1,2})+)/i);
+
+                if (rangeMatch) {
+                    const start = parseInt(rangeMatch[1], 10);
+                    const end = parseInt(rangeMatch[2], 10);
+                    if (end >= start && end <= 31 && start >= 1) qty = (end - start + 1);
+                } else if (listMatch) {
+                    const numbers = listMatch[0].match(/\d{1,2}/g);
+                    if (numbers) {
+                        const validDays = numbers.filter(n => { let num = parseInt(n, 10); return num >= 1 && num <= 31; });
+                        if (validDays.length > 0) qty = validDays.length;
+                    }
+                }
+            }
+            
+            const total = Math.round(basePt * qty * 100) / 100;
+            return { qty: qty, totalPoin: total };
+        }
+
+        function handleStatusChange(selectEl) {
+            const val = selectEl.value;
+            selectEl.className = 'status-picker status-' + (val ? val.replace(/\s+/g, '') : 'Empty');
+            const row = selectEl.closest('.task-row');
+            const ketInput = row.querySelector('.task-ket-input');
+            
+            if (ketInput) {
+                if (val === 'Belum' || val === 'Cancel') {
+                    ketInput.style.display = 'block';
+                    ketInput.placeholder = (val === 'Cancel') ? 'Ket. alasan cancel...' : 'Ket. jika belum selesai...';
+                } else {
+                    ketInput.style.display = 'none';
+                }
+            }
+            updateKPICheck();
+        }
+
+        function updateKPICheck() {
+            const rawName = document.getElementById('pic-name').value.trim();
+            const name = toTitleCase(rawName);
+            const notificationEl = document.getElementById('kpi-notification');
+            const role = getRoleByName(name);
+            
+            if (!role) {
+                if (notificationEl) notificationEl.style.display = 'none';
+                return;
+            }
+
+            const roles = getRolesForMember(name);
+            const roleLabel = roles.length > 1 ? `${roles.join(' + ')} [Hybrid]` : role;
+            const targetKPI = TEAM_CONFIG[role] ? TEAM_CONFIG[role].target : 10;
+            let grandTotalPoin = 0;
+            const taskRows = document.querySelectorAll('#existing-task-container .task-row');
+            
+            taskRows.forEach(row => {
+                let textEl = row.querySelector('.task-edit-input');
+                let statusEl = row.querySelector('.status-picker');
+                if (textEl && textEl.value.trim() !== '' && statusEl && statusEl.value !== 'Cancel') {
+                    let res = parseTaskQtyAndPoin(name, textEl.value.trim());
+                    grandTotalPoin += res.totalPoin;
+                }
+            });
+
+            grandTotalPoin = Math.round(grandTotalPoin * 100) / 100;
+
+            if (notificationEl) {
+                notificationEl.style.display = 'block';
+                if (grandTotalPoin < targetKPI) {
+                    notificationEl.style.background = '#fef2f2';
+                    notificationEl.style.color = '#991b1b';
+                    notificationEl.style.border = '1px solid #fca5a5';
+                    notificationEl.innerHTML = `⚠️ <b>Perhatian (${roleLabel}):</b> Total estimasi saat ini (<b>${grandTotalPoin} Poin</b>) belum memenuhi Target KPI Harian (<b>${targetKPI} Poin</b>).`;
+                } else {
+                    notificationEl.style.background = '#f0fdf4';
+                    notificationEl.style.color = '#166534';
+                    notificationEl.style.border = '1px solid #86efac';
+                    notificationEl.innerHTML = `✅ <b>Mantap (${roleLabel}):</b> Total estimasi saat ini (<b>${grandTotalPoin} Poin</b>) telah memenuhi Target KPI Harian (<b>${targetKPI} Poin</b>)!`;
+                }
+            }
+        }
+
+        function toggleNoteField() {
+            const noteContainer = document.getElementById('note-container');
+            const btn = document.getElementById('btn-toggle-note');
+            if (noteContainer.style.display === 'none') {
+                noteContainer.style.display = 'block';
+                btn.innerText = '📝 - Sembunyikan Catatan / Note';
+            } else {
+                noteContainer.style.display = 'none';
+                btn.innerText = '📝 + Tambah Catatan / Note Tambahan';
+            }
+        }
+
+        // =====================================================================
+        // SINKRONISASI DATA & PENARIKAN RIWAYAT ON PROGRESS 14 HARI (ANTI-STUCK)
+        // =====================================================================
+        function normalizeTaskItem(item, defaultOriginDate = '') {
+            let klien = item.klien || '';
+            let task = item.task || '';
+            let ket = item.keterangan || '';
+
+            if (!task && item.toDoList) {
+                let rawToDo = String(item.toDoList).trim();
+                const klienMatch = rawToDo.match(/^\[(.*?)\]\s*/);
+                if (klienMatch) {
+                    klien = klienMatch[1];
+                    rawToDo = rawToDo.replace(klienMatch[0], '').trim();
+                }
+                const ketMatch = rawToDo.match(/\s*\(Ket:\s*(.*?)\)$/);
+                if (ketMatch) {
+                    ket = ketMatch[1];
+                    rawToDo = rawToDo.replace(ketMatch[0], '').trim();
+                }
+                task = rawToDo;
+            }
+
+            let deadline = String(item.deadline || '').trim();
+            const dmyMatch = deadline.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);
+            if (dmyMatch) {
+                deadline = `${dmyMatch[3]}-${dmyMatch[2].padStart(2, '0')}-${dmyMatch[1].padStart(2, '0')}`;
+            } else {
+                const ymdMatch = deadline.match(/^(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})/);
+                if (ymdMatch) {
+                    deadline = `${ymdMatch[1]}-${ymdMatch[2].padStart(2, '0')}-${ymdMatch[3].padStart(2, '0')}`;
+                }
+            }
+
+            return {
+                id: item.id || ('sync_' + Math.random().toString(36).substr(2, 9)),
+                klien: String(klien).trim(),
+                task: String(task).trim(),
+                deadline: deadline,
+                keterangan: String(ket).trim(),
+                status: String(item.status || '').trim(),
+                isCarryOver: Boolean(item.isCarryOver),
+                originDate: item.originDate || defaultOriginDate || ''
+            };
+        }
+
+        function makeTaskKey(klien, task) {
+            return (String(klien || '').trim() + ':::' + String(task || '').trim()).toLowerCase().replace(/\s+/g, ' ');
+        }
+
+        function stopBackgroundCarryOverScan() {
+            if (activeBgControllers.length > 0) {
+                activeBgControllers.forEach(ctrl => {
+                    try { ctrl.abort(); } catch (e) {}
+                });
+                activeBgControllers = [];
+            }
+            const banner = document.getElementById('bg-scan-banner');
+            if (banner) banner.style.display = 'none';
+        }
+
+        async function fetchWithTimeout(url, options = {}, timeoutMs = 6000) {
+            const ctrl = new AbortController();
+            activeBgControllers.push(ctrl);
+            const timer = setTimeout(() => {
+                try { ctrl.abort(); } catch (e) {}
+            }, timeoutMs);
+
+            try {
+                const res = await fetch(url, { ...options, signal: ctrl.signal });
+                clearTimeout(timer);
+                return res;
+            } catch (err) {
+                clearTimeout(timer);
+                throw err;
+            }
+        }
+
+        async function runBackgroundCarryOverScan(name, today, initialTodayItems, requestId) {
+            stopBackgroundCarryOverScan();
+            const banner = document.getElementById('bg-scan-banner');
+            const seenKeys = {};
+            initialTodayItems.forEach(it => {
+                if (it.task) seenKeys[makeTaskKey(it.klien, it.task)] = true;
+            });
+
+            // Pindai mundur dari H-1 (kemarin) sampai H-14 secara bertahap (3 hari per batch)
+            const daysList = [];
+            for (let d = 1; d <= 14; d++) {
+                daysList.push(getPastDateISO(d));
+            }
+
+            const batchSize = 3;
+            for (let idx = 0; idx < daysList.length; idx += batchSize) {
+                if (requestId !== currentSyncRequestId) return;
+                const batch = daysList.slice(idx, idx + batchSize);
+                const pct = Math.min(100, Math.round(((idx + batch.length) / daysList.length) * 100));
+                if (banner) {
+                    banner.style.display = 'block';
+                    banner.innerText = `⏳ Memeriksa riwayat On Progress 14 hari terakhir... (${pct}%)`;
+                }
+
+                const results = await Promise.all(
+                    batch.map(dateStr =>
+                        fetchWithTimeout(
+                            `${GOOGLE_SCRIPT_URL}?action=getTasks&nama=${encodeURIComponent(name)}&name=${encodeURIComponent(name)}&tanggal=${dateStr}&date=${dateStr}`,
+                            { redirect: 'follow' },
+                            5500
+                        )
+                        .then(r => r.json())
+                        .then(j => ({ dateStr, items: Array.isArray(j.data) ? j.data : [] }))
+                        .catch(() => ({ dateStr, items: [] }))
+                    )
+                );
+
+                if (requestId !== currentSyncRequestId) return;
+
+                let foundNewCarryOver = false;
+                results.forEach(dayRes => {
+                    dayRes.items.forEach(rawItem => {
+                        const norm = normalizeTaskItem(rawItem, dayRes.dateStr);
+                        if (!norm.task) return;
+                        const key = makeTaskKey(norm.klien, norm.task);
+                        // Karena memindai dari H-1 ke H-14, kemunculan pertama adalah status TERBARU
+                        if (!seenKeys[key]) {
+                            seenKeys[key] = true;
+                            if (String(norm.status).toLowerCase().trim() === 'on progress') {
+                                foundNewCarryOver = true;
+                                let db = JSON.parse(localStorage.getItem('daily_report_db')) || [];
+                                db.unshift({
+                                    id: 'sync_carry_' + Math.random().toString(36).substr(2, 9),
+                                    nama: name,
+                                    klien: norm.klien,
+                                    tanggal: today,
+                                    task: norm.task,
+                                    deadline: norm.deadline,
+                                    keterangan: norm.keterangan,
+                                    status: 'On Progress',
+                                    isCarryOver: true,
+                                    originDate: dayRes.dateStr
+                                });
+                                localStorage.setItem('daily_report_db', JSON.stringify(db));
+                            }
+                        }
+                    });
+                });
+
+                if (foundNewCarryOver) {
+                    checkLocalTasks();
+                }
+            }
+
+            if (banner) banner.style.display = 'none';
+            logDiag(`✅ Pemindaian 14 hari selesai untuk "${name}".`);
+        }
+
         async function fetchServerData(force = false) {
             const rawName = document.getElementById('pic-name').value.trim();
             if (!rawName) return;
             if (force) syncConfigFromServer();
+
             const name = toTitleCase(rawName);
             const role = getRoleByName(name);
             const today = getTodayISO();
-// ... existing code ... -->
+
+            if (!role) {
+                checkLocalTasks();
+                return;
+            }
+
+            if (!force && lastSyncedName.toLowerCase() === name.toLowerCase()) {
+                return;
+            }
+            lastSyncedName = name;
+            currentSyncRequestId++;
+            const myRequestId = currentSyncRequestId;
+
+            stopBackgroundCarryOverScan();
+            if (activeFetchController) {
+                try { activeFetchController.abort(); } catch (e) {}
+            }
+            activeFetchController = new AbortController();
+
+            const existingSection = document.getElementById('existing-section');
+            const container = document.getElementById('existing-task-container');
+            existingSection.style.display = 'block';
+            container.innerHTML = `<div style="text-align:center; padding:15px; color:#2563eb; font-weight:600; background:#e0f2fe; border-radius:6px;">⏳ Menyinkronkan data dari server...</div>`;
+
+            if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL === 'MASUKKAN_URL_WEB_APP_ANDA_DISINI') {
+                checkLocalTasks();
+                return;
+            }
+
+            const t0 = performance.now();
+            logDiag(`🔄 Mengambil data "${name}" untuk tanggal ${today}...`);
+
+            try {
+                const url = `${GOOGLE_SCRIPT_URL}?action=getTasks&nama=${encodeURIComponent(name)}&name=${encodeURIComponent(name)}&tanggal=${today}&date=${today}`;
+                const res = await fetch(url, { redirect: 'follow', signal: activeFetchController.signal });
+                if (myRequestId !== currentSyncRequestId) return;
+
+                const latency = Math.round(performance.now() - t0);
+                document.getElementById('diag-badge-latency').innerText = `Waktu Respons: ${latency} ms`;
+
+                const data = await res.json();
+                if (myRequestId !== currentSyncRequestId) return;
+
+                if (data.status === 'sukses' || data.status === 'success' || data.success === true) {
+                    const serverItems = Array.isArray(data.data) ? data.data.map(item => normalizeTaskItem(item)) : [];
+
+                    let db = JSON.parse(localStorage.getItem('daily_report_db')) || [];
+                    db = db.filter(d => !(d.tanggal === today && d.nama.toLowerCase() === name.toLowerCase()));
+                    
+                    serverItems.forEach(item => {
+                        db.push({
+                            id: item.id || ('sync_' + Math.random().toString(36).substr(2, 9)),
+                            nama: name,
+                            klien: item.klien || '',
+                            tanggal: today,
+                            task: item.task || '',
+                            deadline: item.deadline || '',
+                            keterangan: item.keterangan || '',
+                            status: item.status || '',
+                            isCarryOver: item.isCarryOver || false,
+                            originDate: item.originDate || ''
+                        });
+                    });
+                    localStorage.setItem('daily_report_db', JSON.stringify(db));
+
+                    // Langsung buka form tanpa menunggu proses lain
+                    checkLocalTasks();
+
+                    const hasServerCarryOverFlag = (data.carryOverProcessed === true) || serverItems.some(i => i.isCarryOver === true);
+                    if (hasServerCarryOverFlag) {
+                        document.getElementById('diag-badge-version').innerText = 'Versi Script: TERBARU (14 Hari Otomatis)';
+                        document.getElementById('diag-badge-version').style.background = '#166534';
+                        logDiag(`✅ Sinkronisasi instan (${latency}ms): ${serverItems.length} tugas dimuat.`);
+                    } else {
+                        document.getElementById('diag-badge-version').innerText = 'Versi Script: LAMA (Mode Fallback Aktif)';
+                        document.getElementById('diag-badge-version').style.background = '#b45309';
+                        logDiag(`⚠️ Server merespons (${latency}ms) namun masih menjalankan Script Versi Lama. Menjalankan penarikan bertahap 14 hari...`);
+                        runBackgroundCarryOverScan(name, today, serverItems, myRequestId);
+                    }
+                } else {
+                    checkLocalTasks();
+                }
+            } catch (err) {
+                if (err.name === 'AbortError') return;
+                logDiag(`⚠️ Gagal sinkron (${err.message}), memuat data lokal...`);
+                checkLocalTasks();
+            }
+        }
+
+        function checkLocalTasks() {
+            const rawName = document.getElementById('pic-name').value.trim();
+            const nameInput = toTitleCase(rawName);
+            const existingSection = document.getElementById('existing-section');
+            const container = document.getElementById('existing-task-container');
+            container.innerHTML = '';
+
+            const role = getRoleByName(nameInput);
+            if (!role) {
+                existingSection.style.display = 'none';
+                document.getElementById('kpi-notification').style.display = 'none';
+                return;
+            }
+
+            let db = JSON.parse(localStorage.getItem('daily_report_db')) || [];
+            let today = getTodayISO();
+            let userTasks = db.filter(d => d.tanggal === today && d.nama.toLowerCase() === nameInput.toLowerCase());
+
+            existingSection.style.display = 'block';
+
+            if (userTasks.length === 0) {
+                addInlineTaskRow();
+            } else {
+                userTasks.forEach((t) => {
+                    let deadlineVal = t.deadline || '';
+                    let ketVal = t.keterangan || '';
+                    let clientVal = t.klien || '';
+                    let statusVal = t.status || '';
+                    
+                    let showKetStyle = (statusVal === 'Belum' || statusVal === 'Cancel') ? 'display: block;' : 'display: none;';
+                    let ketPlaceholder = (statusVal === 'Cancel') ? 'Ket. alasan cancel...' : 'Ket. jika belum selesai...';
+                    let originLabel = t.originDate ? ` (${formatShortDateID(t.originDate)})` : '';
+                    let carryBadge = t.isCarryOver ? `<span style="background:#fef3c7; color:#92400e; font-size:11px; font-weight:700; padding:4px 8px; border-radius:4px; border:1px solid #f59e0b; display:inline-block; align-self:center; white-space:nowrap;" title="Tugas lanjutan dari tanggal ${t.originDate || 'sebelumnya'} yang masih On Progress">⏳ Lanjutan${originLabel}</span>` : '';
+                    
+                    let row = document.createElement('div');
+                    row.className = 'task-row' + (t.isCarryOver ? ' carry-over-row' : '');
+                    row.setAttribute('data-id', t.id);
+                    row.innerHTML = `
+                        ${carryBadge}
+                        <input type="text" class="task-client-input" id="client-${t.id}" placeholder="Nama Klien...">
+                        <input type="text" class="task-edit-input" id="text-${t.id}" placeholder="Tugas..." oninput="updateKPICheck()">
+                        <input type="date" class="task-deadline-input" id="deadline-${t.id}">
+                        <select class="status-picker status-${statusVal.replace(/\s+/g, '') || 'Empty'}" id="status-${t.id}" onchange="handleStatusChange(this)">
+                            <option value="" ${statusVal === '' ? 'selected disabled':''}>-- Status --</option>
+                            <option value="Belum" ${statusVal === 'Belum' ? 'selected':''}>Belum</option>
+                            <option value="On Progress" ${statusVal === 'On Progress' ? 'selected':''}>On Progress</option>
+                            <option value="Selesai" ${statusVal === 'Selesai' ? 'selected':''}>Selesai</option>
+                            <option value="Cancel" ${statusVal === 'Cancel' ? 'selected':''}>Cancel</option>
+                        </select>
+                        <input type="text" class="task-ket-input" id="ket-${t.id}" placeholder="${ketPlaceholder}" style="${showKetStyle}">
+                        <button type="button" style="width:32px; background:#3b82f6; color:white; border:none; border-radius:4px; cursor:pointer; padding:6px;" title="Duplikat Tugas" onclick="duplicateTaskRow(this)">📑</button>
+                        <button type="button" style="width:32px; background:#dc2626; color:white; border:none; border-radius:4px; cursor:pointer; padding:6px;" title="Hapus Tugas" onclick="removeTaskItem(this, '${t.id}')">X</button>
+                    `;
+                    row.querySelector('.task-client-input').value = clientVal;
+                    row.querySelector('.task-edit-input').value = t.task || '';
+                    row.querySelector('.task-deadline-input').value = deadlineVal;
+                    row.querySelector('.task-ket-input').value = ketVal;
+                    container.appendChild(row);
+                });
+            }
+            updateKPICheck();
+        }
+
+        function addInlineTaskRow() {
+            const container = document.getElementById('existing-task-container');
+            let newId = 'new_' + Math.random().toString(36).substr(2, 9);
+            let row = document.createElement('div');
+            row.className = 'task-row';
+            row.setAttribute('data-id', newId);
+            row.innerHTML = `
+                <input type="text" class="task-client-input" id="client-${newId}" placeholder="Nama Klien...">
+                <input type="text" class="task-edit-input new-task-field" id="text-${newId}" placeholder="Tugas baru hari ini..." oninput="updateKPICheck()">
+                <input type="date" class="task-deadline-input" id="deadline-${newId}">
+                <select class="status-picker status-Empty" id="status-${newId}" onchange="handleStatusChange(this)">
+                    <option value="" selected disabled>-- Status --</option>
+                    <option value="Belum">Belum</option>
+                    <option value="On Progress">On Progress</option>
+                    <option value="Selesai">Selesai</option>
+                    <option value="Cancel">Cancel</option>
+                </select>
+                <input type="text" class="task-ket-input" id="ket-${newId}" placeholder="Ket. jika belum selesai..." style="display: none;">
+                <button type="button" style="width:32px; background:#3b82f6; color:white; border:none; border-radius:4px; cursor:pointer; padding:6px;" title="Duplikat Tugas" onclick="duplicateTaskRow(this)">📑</button>
+                <button type="button" style="width:32px; background:#dc2626; color:white; border:none; border-radius:4px; cursor:pointer; padding:6px;" title="Hapus Tugas" onclick="this.parentElement.remove(); updateKPICheck();">X</button>
+            `;
+            container.appendChild(row);
+            updateKPICheck();
+        }
+
+        function duplicateTaskRow(btn) {
+            const currentRow = btn.closest('.task-row');
+            const clientVal = currentRow.querySelector('.task-client-input').value;
+            const taskVal = currentRow.querySelector('.task-edit-input').value;
+            
+            let newId = 'new_' + Math.random().toString(36).substr(2, 9);
+            let row = document.createElement('div');
+            row.className = 'task-row';
+            row.setAttribute('data-id', newId);
+            
+            row.innerHTML = `
+                <input type="text" class="task-client-input" id="client-${newId}" placeholder="Nama Klien...">
+                <input type="text" class="task-edit-input new-task-field" id="text-${newId}" placeholder="Tugas baru hari ini..." oninput="updateKPICheck()">
+                <input type="date" class="task-deadline-input" id="deadline-${newId}">
+                <select class="status-picker status-Empty" id="status-${newId}" onchange="handleStatusChange(this)">
+                    <option value="" selected disabled>-- Status --</option>
+                    <option value="Belum">Belum</option>
+                    <option value="On Progress">On Progress</option>
+                    <option value="Selesai">Selesai</option>
+                    <option value="Cancel">Cancel</option>
+                </select>
+                <input type="text" class="task-ket-input" id="ket-${newId}" placeholder="Ket. jika belum selesai..." style="display: none;">
+                <button type="button" style="width:32px; background:#3b82f6; color:white; border:none; border-radius:4px; cursor:pointer; padding:6px;" title="Duplikat Tugas" onclick="duplicateTaskRow(this)">📑</button>
+                <button type="button" style="width:32px; background:#dc2626; color:white; border:none; border-radius:4px; cursor:pointer; padding:6px;" title="Hapus Tugas" onclick="this.parentElement.remove(); updateKPICheck();">X</button>
+            `;
+            
+            currentRow.insertAdjacentElement('afterend', row);
+            row.querySelector('.task-client-input').value = clientVal;
+            row.querySelector('.task-edit-input').value = taskVal;
+            updateKPICheck();
+        }
+
+        function removeTaskItem(btn, id) {
+            showConfirm('Hapus tugas ini?', () => {
+                let db = JSON.parse(localStorage.getItem('daily_report_db')) || [];
+                db = db.filter(d => d.id !== id);
+                localStorage.setItem('daily_report_db', JSON.stringify(db));
+                btn.parentElement.remove();
+                updateKPICheck();
+            });
+        }
+
+        // =====================================================================
+        // SIMPAN KE SPREADSHEET & REDIRECT KE WHATSAPP (ANTI-MACET)
+        // =====================================================================
+        function saveAndUpdateAll() {
+            // Hentikan pemindaian latar belakang agar jalur POST langsung diprioritaskan
+            stopBackgroundCarryOverScan();
+
+            const rawName = document.getElementById('pic-name').value.trim();
+            if (!rawName) return showAlert('Masukkan Nama PIC terlebih dahulu!');
+            const name = toTitleCase(rawName);
+            document.getElementById('pic-name').value = name;
+
+            const targetNumber = document.getElementById('wa-number').value.trim();
+            const noteContainer = document.getElementById('note-container');
+            const additionalNote = noteContainer.style.display !== 'none' ? document.getElementById('additional-note').value.trim() : '';
+
+            let db = JSON.parse(localStorage.getItem('daily_report_db')) || [];
+            let today = getTodayISO();
+            let currentTime = "'" + new Date().toLocaleTimeString('id-ID', {hour: '2-digit', minute:'2-digit'}).replace('.', ':'); 
+            
+            const taskRows = document.querySelectorAll('#existing-task-container .task-row');
+            if (taskRows.length === 0) return showAlert('Minimal harus ada 1 tugas!');
+
+            let processedIds = [];
+            let waTasksList = [];
+            let exportData = []; 
+
+            taskRows.forEach((row, index) => {
+                let rowId = row.getAttribute('data-id');
+                let clientEl = row.querySelector('.task-client-input');
+                let textEl = row.querySelector('.task-edit-input');
+                let deadlineEl = row.querySelector('.task-deadline-input');
+                let statusEl = row.querySelector('.status-picker');
+                let ketEl = row.querySelector('.task-ket-input');
+
+                if (!textEl || !statusEl) return;
+                let clientText = clientEl ? clientEl.value.trim() : '';
+                let taskText = textEl.value.trim();
+                let taskDeadline = deadlineEl ? deadlineEl.value : '';
+                let taskStatus = statusEl.value || ''; 
+                let taskKet = ((taskStatus === 'Belum' || taskStatus === 'Cancel') && ketEl) ? ketEl.value.trim() : '';
+
+                if (taskText === '') return;
+
+                let parsed = parseTaskQtyAndPoin(name, taskText);
+                let finalPoin = taskStatus === 'Selesai' ? parsed.totalPoin : 0;
+
+                exportData.push({
+                    no: exportData.length + 1,
+                    nama: name,
+                    role: getRoleByName(name) || 'Content Writer',
+                    tanggal: today,
+                    waktuKirim: currentTime,
+                    klien: clientText,
+                    task: taskText,
+                    qty: parsed.qty,
+                    poin: finalPoin,
+                    deadline: taskDeadline,
+                    keterangan: taskKet,
+                    status: taskStatus
+                });
+
+                if (rowId.startsWith('new_') || rowId.startsWith('sync_')) {
+                    let newObj = {
+                        id: Math.random().toString(36).substr(2, 9) + Date.now().toString(36),
+                        nama: name,
+                        klien: clientText,
+                        role: getRoleByName(name) || 'Content Writer',
+                        tanggal: today,
+                        waktuKirim: currentTime,
+                        no: db.length + 1,
+                        task: taskText,
+                        qty: parsed.qty,
+                        poin: finalPoin,
+                        deadline: taskDeadline,
+                        keterangan: taskKet,
+                        status: taskStatus
+                    };
+                    db.push(newObj);
+                    processedIds.push(newObj.id);
+                    waTasksList.push({ client: clientText, task: taskText, status: taskStatus, deadline: taskDeadline, keterangan: taskKet });
+                } else {
+                    let existingItem = db.find(d => d.id === rowId);
+                    if (existingItem) {
+                        existingItem.nama = name;
+                        existingItem.klien = clientText;
+                        existingItem.task = taskText;
+                        existingItem.status = taskStatus;
+                        existingItem.deadline = taskDeadline;
+                        existingItem.qty = parsed.qty;
+                        existingItem.poin = finalPoin;
+                        existingItem.keterangan = taskKet;
+                        processedIds.push(rowId);
+                        waTasksList.push({ client: clientText, task: taskText, status: taskStatus, deadline: taskDeadline, keterangan: taskKet });
+                    }
+                }
+            });
+
+            if (exportData.length === 0) return showAlert('Minimal isi 1 deskripsi tugas sebelum menyimpan!');
+
+            db = db.filter(d => {
+                if (d.tanggal === today && d.nama.toLowerCase() === name.toLowerCase()) return processedIds.includes(d.id);
+                return true;
+            });
+            localStorage.setItem('daily_report_db', JSON.stringify(db));
+
+            // Susun Format Pesan WhatsApp
+            let waText = `To Do List *${name}* *(${getTodayFormatted()})*:\n\n`;
+            let ketList = [];
+
+            waTasksList.forEach((t, i) => {
+                let statusIcon = (t.status === 'Selesai') ? " ✅" : "";
+                let clientPrefix = t.client ? `[${t.client}] ` : '';
+                let dlText = "";
+                if (t.deadline) {
+                    let formattedDL = formatDateToID(t.deadline);
+                    if (formattedDL) dlText = ` [DL: ${formattedDL}]`;
+                }
+                
+                waText += `${i + 1}. ${clientPrefix}${t.task}${dlText}${statusIcon}\n`;
+
+                if (t.keterangan && t.keterangan !== '') {
+                    ketList.push(`${i + 1}. ${t.keterangan}`);
+                }
+            });
+
+            if (ketList.length > 0) {
+                waText += `\nKeterangan Belum Selesai / Cancel :\n\n`;
+                waText += ketList.join('\n') + '\n';
+            }
+
+            if (additionalNote !== '') {
+                waText += `\nCatatan Tambahan :\n${additionalNote}\n`;
+            }
+
+            const waUrl = `https://api.whatsapp.com/send?phone=${targetNumber}&text=${encodeURIComponent(waText)}`;
+            const waDirectBtn = `<a href="${waUrl}" target="_blank" rel="noopener noreferrer" onclick="closeModal(false)" style="display:inline-block; background:#16a34a; color:white; text-decoration:none; padding:9px 16px; border-radius:6px; font-weight:600; font-size:14px;">📲 Buka & Kirim ke WhatsApp</a>`;
+
+            const submitBtn = document.querySelector('.btn-submit');
+            const originalBtnText = submitBtn.innerHTML;
+            submitBtn.innerHTML = '⏳ Sedang Menyimpan ke Spreadsheet...';
+            submitBtn.disabled = true;
+
+            const postController = new AbortController();
+            const postTimeout = setTimeout(() => {
+                try { postController.abort(); } catch (e) {}
+            }, 9000);
+
+            fetch(GOOGLE_SCRIPT_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                redirect: 'follow',
+                signal: postController.signal,
+                body: JSON.stringify(exportData)
+            })
+            .then(response => {
+                clearTimeout(postTimeout);
+                return response.text();
+            })
+            .then(rawText => {
+                submitBtn.innerHTML = originalBtnText;
+                submitBtn.disabled = false;
+
+                let data = null;
+                try { data = JSON.parse(rawText); } catch (e) {}
+
+                if (data && data.status === 'error') {
+                    showAlert('❌ ERROR SPREADSHEET: ' + data.message);
+                } else {
+                    logDiag(`✅ Berhasil menyimpan ${exportData.length} baris tugas untuk "${name}".`);
+                    showAlert(
+                        '✅ <b>Data berhasil diperbarui & disinkronkan!</b><br>Mengalihkan ke WhatsApp...',
+                        () => { window.location.href = waUrl; },
+                        waDirectBtn
+                    );
+                    setTimeout(() => {
+                        try { window.location.href = waUrl; } catch (e) {}
+                    }, 400);
+                }
+            })
+            .catch(error => {
+                clearTimeout(postTimeout);
+                // Jalur penyelamat no-cors apabila browser memblokir pembacaan respons redirect 302
+                try {
+                    fetch(GOOGLE_SCRIPT_URL, {
+                        method: 'POST',
+                        mode: 'no-cors',
+                        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                        keepalive: true,
+                        body: JSON.stringify(exportData)
+                    });
+                } catch (e) {}
+
+                submitBtn.innerHTML = originalBtnText;
+                submitBtn.disabled = false;
+                logDiag(`⚠️ Jalur cepat (no-cors) digunakan untuk menyimpan data "${name}".`);
+
+                showAlert(
+                    '✅ <b>Data telah dikirim ke Spreadsheet!</b><br>Silakan lanjutkan pengiriman rekap ke WhatsApp:',
+                    () => { window.location.href = waUrl; },
+                    waDirectBtn
+                );
+                setTimeout(() => {
+                    try { window.location.href = waUrl; } catch (e) {}
+                }, 400);
+            });
+        }
+    </script>
+</body>
+</html>
