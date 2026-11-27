@@ -517,6 +517,30 @@
             return `${day}/${month}/${year}`;
         }
 
+        /**
+         * Menghitung Sisa Hari (SH) dengan rumus: Tanggal Hari Ini - Tanggal Deadline
+         * - Belum jatuh tempo: [SH: -2]
+         * - Tepat hari H: [SH: 0]
+         * - Melewati deadline (Overdue): [SH: +3]
+         */
+        function calculateSisaHariTag(todayISO, deadlineISO) {
+            if (!todayISO || !deadlineISO) return '';
+            const tParts = todayISO.split('-');
+            const dParts = deadlineISO.split('-');
+            if (tParts.length !== 3 || dParts.length !== 3) return '';
+
+            const todayDate = new Date(parseInt(tParts[0], 10), parseInt(tParts[1], 10) - 1, parseInt(tParts[2], 10));
+            const deadlineDate = new Date(parseInt(dParts[0], 10), parseInt(dParts[1], 10) - 1, parseInt(dParts[2], 10));
+            if (isNaN(todayDate.getTime()) || isNaN(deadlineDate.getTime())) return '';
+
+            const msPerDay = 24 * 60 * 60 * 1000;
+            const diffDays = Math.round((todayDate.getTime() - deadlineDate.getTime()) / msPerDay);
+
+            if (diffDays > 0) return `[SH: +${diffDays}]`;
+            if (diffDays < 0) return `[SH: ${diffDays}]`;
+            return `[SH: 0]`;
+        }
+
         window.onload = function() {
             const d = new Date();
             const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
@@ -994,7 +1018,8 @@
                 keterangan: String(ket).trim(),
                 status: String(item.status || '').trim(),
                 isCarryOver: Boolean(item.isCarryOver),
-                originDate: item.originDate || defaultOriginDate || ''
+                originDate: item.originDate || defaultOriginDate || '',
+                startDate: item.startDate || item.originDate || defaultOriginDate || ''
             };
         }
 
@@ -1037,7 +1062,8 @@
             initialTodayItems.forEach(it => {
                 if (it.task) todayKeys[makeTaskKey(it.klien, it.task)] = true;
             });
-            const seenPastKeys = {};
+            const seenPastLatestStatus = {};
+            const earliestTaskDateMap = {};
 
             // Pindai mundur dari H-1 (kemarin) sampai H-14 secara bertahap (3 hari per batch)
             const daysList = [];
@@ -1076,10 +1102,17 @@
                         const norm = normalizeTaskItem(rawItem, dayRes.dateStr);
                         if (!norm.task) return;
                         const key = makeTaskKey(norm.klien, norm.task);
+
+                        // Terus perbarui tanggal mulai paling awal (TM) saat memindai makin jauh ke belakang
+                        if (!earliestTaskDateMap[key] || dayRes.dateStr < earliestTaskDateMap[key]) {
+                            earliestTaskDateMap[key] = dayRes.dateStr;
+                        }
+                        const earliestDate = earliestTaskDateMap[key];
+
                         // Karena memindai dari H-1 ke H-14, kemunculan pertama adalah status TERBARU sebelum hari ini
-                        if (!seenPastKeys[key]) {
-                            seenPastKeys[key] = true;
-                            if (String(norm.status).toLowerCase().trim() === 'on progress') {
+                        if (!seenPastLatestStatus[key]) {
+                            seenPastLatestStatus[key] = String(norm.status).toLowerCase().trim();
+                            if (seenPastLatestStatus[key] === 'on progress') {
                                 foundCarryOverUpdate = true;
                                 let db = JSON.parse(localStorage.getItem('daily_report_db')) || [];
                                 if (!todayKeys[key]) {
@@ -1094,18 +1127,36 @@
                                         keterangan: norm.keterangan,
                                         status: 'On Progress',
                                         isCarryOver: true,
-                                        originDate: dayRes.dateStr
+                                        originDate: dayRes.dateStr,
+                                        startDate: earliestDate
                                     });
                                 } else {
-                                    // Tandai ulang jika tugas lanjutan ini sudah tersimpan di pagi hari agar tetap tidak terkirim ke WA
+                                    // Tandai ulang jika tugas lanjutan ini sudah tersimpan di hari ini agar tetap memiliki TM terawal
                                     db.forEach(d => {
                                         if (d.tanggal === today && d.nama.toLowerCase() === name.toLowerCase() && makeTaskKey(d.klien, d.task) === key) {
                                             d.isCarryOver = true;
                                             d.originDate = dayRes.dateStr;
+                                            d.startDate = earliestDate;
                                         }
                                     });
                                 }
                                 localStorage.setItem('daily_report_db', JSON.stringify(db));
+                            }
+                        } else if (seenPastLatestStatus[key] === 'on progress') {
+                            // Perbarui startDate (TM) di localStorage jika ditemukan tanggal input yang lebih awal lagi
+                            let db = JSON.parse(localStorage.getItem('daily_report_db')) || [];
+                            let updatedStart = false;
+                            db.forEach(d => {
+                                if (d.tanggal === today && d.nama.toLowerCase() === name.toLowerCase() && makeTaskKey(d.klien, d.task) === key) {
+                                    if (!d.startDate || earliestDate < d.startDate) {
+                                        d.startDate = earliestDate;
+                                        updatedStart = true;
+                                    }
+                                }
+                            });
+                            if (updatedStart) {
+                                localStorage.setItem('daily_report_db', JSON.stringify(db));
+                                foundCarryOverUpdate = true;
                             }
                         }
                     });
@@ -1188,7 +1239,8 @@
                             keterangan: item.keterangan || '',
                             status: item.status || '',
                             isCarryOver: item.isCarryOver || false,
-                            originDate: item.originDate || ''
+                            originDate: item.originDate || '',
+                            startDate: item.startDate || item.originDate || today
                         });
                     });
                     localStorage.setItem('daily_report_db', JSON.stringify(db));
@@ -1248,14 +1300,16 @@
                     
                     let showKetStyle = (statusVal === 'Belum' || statusVal === 'Cancel') ? 'display: block;' : 'display: none;';
                     let ketPlaceholder = (statusVal === 'Cancel') ? 'Ket. alasan cancel...' : 'Ket. jika belum selesai...';
-                    let originLabel = t.originDate ? ` (${formatShortDateID(t.originDate)})` : '';
-                    let carryBadge = t.isCarryOver ? `<span style="background:#fef3c7; color:#92400e; font-size:11px; font-weight:700; padding:4px 8px; border-radius:4px; border:1px solid #f59e0b; display:inline-block; align-self:center; white-space:nowrap;" title="Tugas lanjutan dari tanggal ${t.originDate || 'sebelumnya'} yang masih On Progress">⏳ Lanjutan${originLabel}</span>` : '';
+                    let effectiveStartDate = t.startDate || t.originDate || today;
+                    let originLabel = effectiveStartDate ? ` (${formatShortDateID(effectiveStartDate)})` : '';
+                    let carryBadge = t.isCarryOver ? `<span style="background:#fef3c7; color:#92400e; font-size:11px; font-weight:700; padding:4px 8px; border-radius:4px; border:1px solid #f59e0b; display:inline-block; align-self:center; white-space:nowrap;" title="Tugas lanjutan sejak tanggal mulai ${formatDateToID(effectiveStartDate)}">⏳ Lanjutan${originLabel}</span>` : '';
                     
                     let row = document.createElement('div');
                     row.className = 'task-row' + (t.isCarryOver ? ' carry-over-row' : '');
                     row.setAttribute('data-id', t.id);
                     row.setAttribute('data-carry-over', t.isCarryOver ? 'true' : 'false');
                     row.setAttribute('data-origin-date', t.originDate || '');
+                    row.setAttribute('data-start-date', effectiveStartDate);
                     row.innerHTML = `
                         ${carryBadge}
                         <input type="text" class="task-client-input" id="client-${t.id}" placeholder="Nama Klien...">
@@ -1285,11 +1339,13 @@
         function addInlineTaskRow() {
             const container = document.getElementById('existing-task-container');
             let newId = 'new_' + Math.random().toString(36).substr(2, 9);
+            let today = getTodayISO();
             let row = document.createElement('div');
             row.className = 'task-row';
             row.setAttribute('data-id', newId);
             row.setAttribute('data-carry-over', 'false');
             row.setAttribute('data-origin-date', '');
+            row.setAttribute('data-start-date', today);
             row.innerHTML = `
                 <input type="text" class="task-client-input" id="client-${newId}" placeholder="Nama Klien...">
                 <input type="text" class="task-edit-input new-task-field" id="text-${newId}" placeholder="Tugas baru hari ini..." oninput="updateKPICheck()">
@@ -1315,11 +1371,13 @@
             const taskVal = currentRow.querySelector('.task-edit-input').value;
             
             let newId = 'new_' + Math.random().toString(36).substr(2, 9);
+            let today = getTodayISO();
             let row = document.createElement('div');
             row.className = 'task-row';
             row.setAttribute('data-id', newId);
             row.setAttribute('data-carry-over', 'false');
             row.setAttribute('data-origin-date', '');
+            row.setAttribute('data-start-date', today);
             
             row.innerHTML = `
                 <input type="text" class="task-client-input" id="client-${newId}" placeholder="Nama Klien...">
@@ -1377,13 +1435,15 @@
             if (taskRows.length === 0) return showAlert('Minimal harus ada 1 tugas!');
 
             let processedIds = [];
-            let waTasksList = [];
+            let waTodayTasksList = [];
+            let waOnProgressTasksList = [];
             let exportData = []; 
 
             taskRows.forEach((row, index) => {
                 let rowId = row.getAttribute('data-id');
                 let isCarryOverRow = row.getAttribute('data-carry-over') === 'true';
                 let originDateRow = row.getAttribute('data-origin-date') || '';
+                let startDateRow = row.getAttribute('data-start-date') || (isCarryOverRow ? originDateRow : today) || today;
                 let clientEl = row.querySelector('.task-client-input');
                 let textEl = row.querySelector('.task-edit-input');
                 let deadlineEl = row.querySelector('.task-deadline-input');
@@ -1418,17 +1478,22 @@
                     status: taskStatus
                 });
 
-                // Masukkan ke pesan WhatsApp jika:
-                // 1. Tugas baru yang dibuat/ditulis pada form HARI INI (!isCarryOverRow), ATAU
-                // 2. Tugas bawaan dari hari sebelumnya yang hari ini diselesaikan (taskStatus === 'Selesai')
+                const waTaskEntry = {
+                    client: clientText,
+                    task: taskText,
+                    status: taskStatus,
+                    startDate: startDateRow,
+                    deadline: taskDeadline,
+                    keterangan: taskKet
+                };
+
+                // Opsi B — Pisahkan menjadi 2 kelompok di WhatsApp:
+                // 1. Tugas Hari Ini: tugas baru hari ini + tugas bawaan yang hari ini diselesaikan ('Selesai')
+                // 2. Tugas On Progress: tugas bawaan dari hari sebelumnya yang masih berstatus 'On Progress'
                 if (!isCarryOverRow || taskStatus === 'Selesai') {
-                    waTasksList.push({
-                        client: clientText,
-                        task: taskText,
-                        status: taskStatus,
-                        deadline: taskDeadline,
-                        keterangan: taskKet
-                    });
+                    waTodayTasksList.push(waTaskEntry);
+                } else if (isCarryOverRow && taskStatus === 'On Progress') {
+                    waOnProgressTasksList.push(waTaskEntry);
                 }
 
                 if (rowId.startsWith('new_') || rowId.startsWith('sync_')) {
@@ -1447,7 +1512,8 @@
                         keterangan: taskKet,
                         status: taskStatus,
                         isCarryOver: isCarryOverRow,
-                        originDate: originDateRow
+                        originDate: originDateRow,
+                        startDate: startDateRow
                     };
                     db.push(newObj);
                     processedIds.push(newObj.id);
@@ -1464,6 +1530,7 @@
                         existingItem.keterangan = taskKet;
                         existingItem.isCarryOver = isCarryOverRow;
                         existingItem.originDate = originDateRow;
+                        existingItem.startDate = startDateRow;
                         processedIds.push(rowId);
                     }
                 }
@@ -1477,28 +1544,47 @@
             });
             localStorage.setItem('daily_report_db', JSON.stringify(db));
 
-            // Susun Format Pesan WhatsApp (Tugas baru hari ini + tugas bawaan yang diselesaikan hari ini)
+            // Helper penyusun format baris tugas WA dengan tag [TM] [DL] [SH]
+            function formatWaTaskLine(t, indexNumber) {
+                let statusIcon = (t.status === 'Selesai') ? " ✅" : "";
+                let clientPrefix = t.client ? `[${t.client}] ` : '';
+                let tmFormatted = formatDateToID(t.startDate || today);
+                let tmTag = tmFormatted ? ` [TM: ${tmFormatted}]` : '';
+
+                let dlAndShTag = "";
+                if (t.deadline) {
+                    let formattedDL = formatDateToID(t.deadline);
+                    if (formattedDL) {
+                        let shTag = calculateSisaHariTag(today, t.deadline);
+                        dlAndShTag = ` [DL: ${formattedDL}]${shTag ? ' ' + shTag : ''}`;
+                    }
+                }
+
+                return `${indexNumber}. ${clientPrefix}${t.task}${tmTag}${dlAndShTag}${statusIcon}\n`;
+            }
+
+            // Susun Format Pesan WhatsApp (Opsi B: Kelompok Tugas Hari Ini & Kelompok Tugas On Progress)
             let waText = `To Do List *${name}* *(${getTodayFormatted()})*:\n\n`;
             let ketList = [];
 
-            if (waTasksList.length === 0) {
-                waText += `_Tidak ada tugas baru maupun tugas lanjutan yang diselesaikan hari ini (pembaruan status tersimpan di Spreadsheet)._\n`;
+            if (waTodayTasksList.length === 0 && waOnProgressTasksList.length === 0) {
+                waText += `_Tidak ada tugas baru maupun tugas On Progress hari ini (pembaruan status tersimpan di Spreadsheet)._\n`;
             } else {
-                waTasksList.forEach((t, i) => {
-                    let statusIcon = (t.status === 'Selesai') ? " ✅" : "";
-                    let clientPrefix = t.client ? `[${t.client}] ` : '';
-                    let dlText = "";
-                    if (t.deadline) {
-                        let formattedDL = formatDateToID(t.deadline);
-                        if (formattedDL) dlText = ` [DL: ${formattedDL}]`;
-                    }
-                    
-                    waText += `${i + 1}. ${clientPrefix}${t.task}${dlText}${statusIcon}\n`;
+                if (waTodayTasksList.length > 0) {
+                    waTodayTasksList.forEach((t, i) => {
+                        waText += formatWaTaskLine(t, i + 1);
+                        if (t.keterangan && t.keterangan !== '') {
+                            ketList.push(`${i + 1}. ${t.keterangan}`);
+                        }
+                    });
+                }
 
-                    if (t.keterangan && t.keterangan !== '') {
-                        ketList.push(`${i + 1}. ${t.keterangan}`);
-                    }
-                });
+                if (waOnProgressTasksList.length > 0) {
+                    waText += `${waTodayTasksList.length > 0 ? '\n' : ''}*Tugas On Progress :*\n\n`;
+                    waOnProgressTasksList.forEach((t, i) => {
+                        waText += formatWaTaskLine(t, i + 1);
+                    });
+                }
             }
 
             if (ketList.length > 0) {
